@@ -1,0 +1,36 @@
+# docker-compose up --build 로 실행
+version: '3'
+services:
+  database:
+    image: mysql:8.0
+    container_name: database
+    env_file:
+      - .env
+    ports:
+      - "3305:3306"
+    networks:
+      - MZ
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - database
+    command: >
+      sh -c "sleep 10 &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+    tty: true
+    networks:
+      - MZ
+
+networks:
+  MZ:
+    driver: bridge

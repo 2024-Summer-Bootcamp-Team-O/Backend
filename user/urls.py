@@ -1,0 +1,6 @@
+appname = 'user'
+
+urlpatterns = [
+
+]
+
