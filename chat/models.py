@@ -1,49 +1,49 @@
 from django.db import models
-
 from user.models import User
 
 
 class Character(models.Model):
-    characterid = models.AutoField(primary_key=True)
-    charactername = models.CharField(max_length=20)
+    character_id = models.AutoField(primary_key=True)
+    character_name = models.CharField(max_length=20)
+    character_script = models.CharField(max_length=1000)
 
     def __str__(self):
-        return self.charactername
+        return self.character_name
 
 
 class Work(models.Model):
-    workerid = models.AutoField(primary_key=True)
-    workerlocation = models.CharField(max_length=2)
+    worker_id = models.AutoField(primary_key=True)
+    worker_location = models.CharField(max_length=2)
 
     def __str__(self):
-        return self.workerlocation
+        return self.worker_location
 
 
 class EpisodeTime(models.Model):
-    timeid = models.AutoField(primary_key=True)
-    episodetime = models.CharField(max_length=200)
+    time_id = models.AutoField(primary_key=True)
+    episode_time = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.timeid
+        return str(self.time_id)
 
 
 class Episode(models.Model):
-    episodeid = models.AutoField(primary_key=True)
-    episodecontent = models.CharField(max_length=200)
-    episodetime = models.ForeignKey(EpisodeTime, on_delete=models.CASCADE)
+    episode_id = models.AutoField(primary_key=True)
+    episode_content = models.CharField(max_length=200)
+    episode_time = models.ForeignKey(EpisodeTime, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.episodeid
+        return str(self.episode_id)
 
 
 class ChatRoom(models.Model):
-    roomid = models.AutoField(primary_key=True)
+    room_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     character = models.ForeignKey(Character, on_delete=models.CASCADE)
     work = models.ForeignKey(Work, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.roomid
+        return str(self.room_id)
 
 
 class ChatEpi(models.Model):
