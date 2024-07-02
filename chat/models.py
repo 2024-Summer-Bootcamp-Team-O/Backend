@@ -41,6 +41,7 @@ class ChatRoom(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     character = models.ForeignKey(Character, on_delete=models.CASCADE)
     work = models.ForeignKey(Work, on_delete=models.CASCADE)
+    result = models.IntegerField()
 
     def __str__(self):
         return str(self.room_id)
