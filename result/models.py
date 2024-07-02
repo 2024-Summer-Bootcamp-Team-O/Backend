@@ -11,8 +11,7 @@ class Result(models.Model):
     result = models.IntegerField()
 
     class Meta:
-        unique_together = ('room', 'user')
+        unique_together = ("room", "user")
 
     def __str__(self):
         return str(self.result)
-

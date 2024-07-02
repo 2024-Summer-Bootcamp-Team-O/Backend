@@ -1,7 +1,3 @@
+appname = "chat"
 
-appname = 'chat'
-
-urlpatterns = [
-
-]
-
+urlpatterns = []

@@ -51,8 +51,7 @@ class ChatEpi(models.Model):
     episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('room', 'episode')
+        unique_together = ("room", "episode")
 
     def __str__(self):
         return f"{self.room}, {self.episode}"
-
