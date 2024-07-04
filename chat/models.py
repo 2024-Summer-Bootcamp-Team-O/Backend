@@ -52,7 +52,7 @@ class chat_room(models.Model):
     room_id = models.AutoField(primary_key=True)
     member = models.ForeignKey(member, on_delete=models.CASCADE)
     character = models.ForeignKey(character, on_delete=models.CASCADE)
-    work = models.ForeignKey(work, on_delete=models.CASCADE)
+    work = models.ForeignKey(work, on_delete=models.CASCADE, null=True, blank=True)
     result = models.CharField(max_length=2000, null=True, blank=True)
     mz_percent = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
