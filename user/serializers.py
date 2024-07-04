@@ -1,16 +1,11 @@
 from rest_framework import serializers
-from rest_framework.authtoken.admin import User
 from user.models import member
 from django.contrib.auth.hashers import make_password
-
-from user.models import user
 
 
 class LoginSerializer(serializers.Serializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['user_id', 'password', 'user_name']
         model = member
         fields = ("member_email", "member_password", "member_name")
 
