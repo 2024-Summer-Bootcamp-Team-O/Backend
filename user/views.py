@@ -1,10 +1,14 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
+
 from user.models import member
-from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import UserRegistrationSerializer
+from django.contrib.auth import authenticate, login, logout
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import LoginSerializer
+
 
 
 class UserRegistrationView(APIView):
@@ -39,7 +43,6 @@ class CheckUserEmailView(APIView):
     )
     def get(self, request, *args, **kwargs):
         member_email = request.query_params.get("member_email")
-
         if member.objects.filter(member_email=member_email).exists():
             return Response(
                 {"message": "이미 존재하는 이메일입니다"},
@@ -49,3 +52,27 @@ class CheckUserEmailView(APIView):
         return Response(
             {"message": "사용 가능한 이메일입니다"}, status=status.HTTP_200_OK
         )
+
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            password = serializer.validated_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                request.session['user_id'] = user.id  # 사용자 ID를 세션에 저장
+                return Response({'message': 'Login successful', 'user_id': user.id}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)
+        request.session.flush()  # 세션 삭제
+        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+
+
