@@ -33,7 +33,7 @@ urlpatterns = [
         name="schema-redoc-v1",
     ),
     path("admin/", admin.site.urls),
-    path("user/", include("user.urls")),
+    path("users/", include("user.urls")),
     path("apps/", include("chat.urls")),
     path("results/", include("result.urls")),
 ]
