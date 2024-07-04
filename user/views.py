@@ -1,4 +1,3 @@
-
 from user.models import member
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -22,7 +21,7 @@ class UserRegistrationView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "회원가입에 성공하였습니다."}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -55,24 +54,36 @@ class CheckUserEmailView(APIView):
 
 
 class LoginView(APIView):
+    @swagger_auto_schema(
+        operation_id="로그인을 위한 API",
+        request_body=LoginSerializer,
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                request.session['user_id'] = user.id  # 사용자 ID를 세션에 저장
-                return Response({'message': 'Login successful', 'user_id': user.id}, status=status.HTTP_200_OK)
-            else:
-                return Response({'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.validated_data["member"]
+            request.session['member_id'] = user.member_id  # 세션에 사용자 ID 저장
+            request.session.save()
+
+            print(f"Session Data: {request.session.items()}")
+            return Response({'message': '로그인에 성공하였습니다.'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LogoutView(APIView):
+    @swagger_auto_schema(
+        operation_id="로그아웃을 위한 API",
+    )
     def post(self, request):
         logout(request)
-        request.session.flush()  # 세션 삭제
-        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        return Response({'message': '로그아웃에 성공하였습니다.'}, status=status.HTTP_200_OK)
 
+
+class ProfileView(APIView):
+    def get(self, request):
+        member_id = request.session.get("member_id")
+        if member_id:
+            return Response({'message': f'로그인된 유저: {member_id}'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
 
