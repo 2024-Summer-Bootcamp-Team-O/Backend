@@ -1,5 +1,5 @@
 from django.db import models
-from user.models import user
+from user.models import member
 
 
 class character(models.Model):
@@ -50,7 +50,7 @@ class episode(models.Model):
 
 class chat_room(models.Model):
     room_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(user, on_delete=models.CASCADE)
+    member = models.ForeignKey(member, on_delete=models.CASCADE)
     character = models.ForeignKey(character, on_delete=models.CASCADE)
     work = models.ForeignKey(work, on_delete=models.CASCADE)
     result = models.CharField(max_length=2000, null=True, blank=True)
