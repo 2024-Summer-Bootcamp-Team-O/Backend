@@ -1,41 +1,41 @@
 from rest_framework import serializers
-from user.models import member
+from user.models import user
 from django.contrib.auth.hashers import make_password, check_password
 
 
 class LoginSerializer(serializers.Serializer):
-    member_email = serializers.EmailField()
-    member_password = serializers.CharField(write_only=True)
+    user_email = serializers.EmailField()
+    user_password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        member_email = data.get("member_email")
-        member_password = data.get("member_password")
+        user_email = data.get("user_email")
+        user_password = data.get("user_password")
 
         try:
-            member_instance = member.objects.get(member_email=member_email)
-        except member.DoesNotExist:
+            user_instance = user.objects.get(user_email=user_email)
+        except user.DoesNotExist:
             raise serializers.ValidationError("아이디 또는 비밀번호가 일치하지 않습니다.")
 
-        if not check_password(member_password, member_instance.member_password):
+        if not check_password(user_password, user_instance.user_password):
             raise serializers.ValidationError("아이디 또는 비밀번호가 일치하지 않습니다.")
 
-        data["member"] = member_instance
+        data["user"] = user_instance
         return data
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    member_email = serializers.EmailField()
-    member_password = serializers.CharField(write_only=True)
-    member_name = serializers.CharField(max_length=100)
+    user_email = serializers.EmailField()
+    user_password = serializers.CharField(write_only=True)
+    user_name = serializers.CharField(max_length=100)
 
     class Meta:
-        model = member
-        fields = ("member_email", "member_password", "member_name")
+        model = user
+        fields = ("user_email", "user_password", "user_name")
 
     def create(self, validated_data):
-        new_member = member.objects.create(
-            member_email=validated_data["member_email"],
-            member_password=make_password(validated_data["member_password"]),
-            member_name=validated_data.get("member_name", ""),
+        new_user = user.objects.create(
+            user_email=validated_data["user_email"],
+            user_password=make_password(validated_data["user_password"]),
+            user_name=validated_data.get("user_name", ""),
         )
-        return new_member
+        return new_user
