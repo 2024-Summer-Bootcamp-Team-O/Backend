@@ -78,12 +78,3 @@ class LogoutView(APIView):
         logout(request)
         return Response({'message': '로그아웃에 성공하였습니다.'}, status=status.HTTP_200_OK)
 
-
-class ProfileView(APIView):
-    def get(self, request):
-        member_id = request.session.get("member_id")
-        if member_id:
-            return Response({'message': f'로그인된 유저: {member_id}'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
-
