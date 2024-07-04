@@ -25,7 +25,7 @@ class UserRegistrationView(APIView):
 
 class CheckUserEmailView(APIView):
     @swagger_auto_schema(
-        operation_description="이메일 중복 확인 API",
+        operation_id="이메일 중복 확인 API",
         manual_parameters=[
             openapi.Parameter(
                 "member_email",
