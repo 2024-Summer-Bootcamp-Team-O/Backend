@@ -3,6 +3,7 @@ from user.models import member
 from django.contrib.auth.hashers import make_password
 
 
+class LoginSerializer(serializers.Serializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = member
