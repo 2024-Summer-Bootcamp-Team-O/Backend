@@ -4,8 +4,15 @@ services:
   database:
     image: mysql:8.0
     container_name: database
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
     env_file:
       - .env
+    environment:
+      TZ: Asia/Seoul
+      LANG: C.UTF-8
     ports:
       - "3305:3306"
     networks:
