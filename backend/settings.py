@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",
+    "channels",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -122,6 +125,9 @@ CACHES = {
     }
 }
 
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -161,6 +167,8 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+ASGI_APPLICATION = "backend.asgi.application"
 
 CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672/"
 CELERY_ACCEPT_CONTENT = ["application/json"]

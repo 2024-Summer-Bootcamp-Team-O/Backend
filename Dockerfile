@@ -5,12 +5,7 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --upgrade pip
-RUN pip install djangorestframework
-RUN pip install drf-yasg
 RUN pip install django-redis
-RUN pip install djangorestframework-simplejwt
-RUN pip install django-cors-headers
 RUN pip install -r requirements.txt
-RUN pip install cryptography
 
 EXPOSE 8000
