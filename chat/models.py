@@ -3,14 +3,14 @@ from user.models import user
 
 
 class work(models.Model):
-    worker_id = models.AutoField(primary_key=True)
-    worker_location = models.CharField(max_length=2)
+    work_id = models.AutoField(primary_key=True)
+    work_location = models.CharField(max_length=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.worker_location
+        return self.work_location
 
 
 class character(models.Model):
@@ -27,8 +27,8 @@ class character(models.Model):
 
 
 class episode_time(models.Model):
-    time_id = models.AutoField(primary_key=True)
-    episode_time = models.CharField(max_length=200)
+    episode_time_id = models.AutoField(primary_key=True)
+    episode_flow = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
