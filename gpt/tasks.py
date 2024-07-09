@@ -13,6 +13,7 @@ load_dotenv()
 openai.api_key = os.environ.get("GPT_API_KEY")
 feedback_count = 1
 
+
 # 대사 제공과 동시에 선택지 제공
 @shared_task
 def get_gpt_talk(charcater_id, episode_id):

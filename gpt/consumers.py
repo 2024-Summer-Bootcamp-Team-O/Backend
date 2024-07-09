@@ -1,8 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 
-from chat.tasks import get_gpt_choice
-
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
