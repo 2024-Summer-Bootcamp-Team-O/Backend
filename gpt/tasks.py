@@ -16,7 +16,7 @@ feedback_count = 1
 
 # 대사 제공과 동시에 선택지 제공
 @shared_task
-def get_gpt_talk(charcater_id, episode_id):
+def get_gpt_message(charcater_id, episode_id):
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
     characters = character.objects.get(character_id=charcater_id)
     character_script = characters.character_script
@@ -210,7 +210,7 @@ def get_gpt_result():
                                     You must provide answer in Korean.\
                                     Don't generate the questions given earlier, just generate the answers.\
                                     When you generating an answer, don't explain the answer or question in advance, just create an answer.\
-                                    Generate answers in 200 Korean characters.\
+                                    Generate answers in 300 Korean characters.\
                                     When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
                                 """
             },
