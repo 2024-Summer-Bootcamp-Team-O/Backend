@@ -1,5 +1,16 @@
-Django==5.1a1
+Django==4.2.3
 python-dotenv==1.0.0
 djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+django-cors-headers==4.2.0
+cryptography==41.0.2
+drf-yasg==1.21.6
 PyMySQL~=1.1.1
 celery==5.3.1
+django-celery-beat==2.5.0
+django-celery-results==2.5.0
+channels==3.0.3
+channels-redis==3.3.0
+openai==0.28.0
+redis==5.0.0b2
+requests==2.26.0
