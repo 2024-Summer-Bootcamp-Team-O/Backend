@@ -38,4 +38,5 @@ urlpatterns = [
     path("users/", include("user.urls")),
     path("apps/", include("chat.urls")),
     path("results/", include("result.urls")),
+    path("gpts/", include("gpt.urls")),
 ]

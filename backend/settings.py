@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "chat.apps.ChatConfig",
     "result.apps.ResultConfig",
     "user.apps.UserConfig",
+    "gpt.apps.GptConfig",
     "rest_framework",
     "drf_yasg",
     "corsheaders",
