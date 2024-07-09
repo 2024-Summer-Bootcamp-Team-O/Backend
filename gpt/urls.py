@@ -5,6 +5,7 @@ from gpt import views
 app_name = "gpt"
 
 urlpatterns = [
-    path("talk", views.GetGPTTalkView.as_view(), name="gpt-talk"),
-    path("answer", views.GetGPTAnswerView.as_view(), name="gpt-answer"),
+    path("messages", views.GetGPTMessageView.as_view(), name="gpt-message"),
+    path("answers", views.GetGPTAnswerView.as_view(), name="gpt-answer"),
+    path("results", views.GetGPTResultView.as_view(), name="gpt-result"),
 ]

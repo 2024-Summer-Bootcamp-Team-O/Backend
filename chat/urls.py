@@ -5,5 +5,5 @@ from . import views
 appname = "chat"
 
 urlpatterns = [
-    path('answer', views.AnswerView.as_view(), name='choice'),
+    path('answers', views.AnswerView.as_view(), name='choice'),
 ]

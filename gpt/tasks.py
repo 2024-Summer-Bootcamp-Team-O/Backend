@@ -16,7 +16,7 @@ feedback_count = 1
 
 # 대사 제공과 동시에 선택지 제공
 @shared_task
-def get_gpt_talk(charcater_id, episode_id):
+def get_gpt_message(charcater_id, episode_id):
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
     characters = character.objects.get(character_id=charcater_id)
     character_script = characters.character_script
@@ -101,6 +101,7 @@ def get_gpt_choice(talk_content, episode_id):
 
     return employee_choices
 
+
 # 답변과 동시에 피드백 제공
 @shared_task
 def get_gpt_answer(choice_content, chracater_id, episode_id, talk_content, mz_percent):
@@ -169,12 +170,12 @@ def get_gpt_feedback(choice_content, episode_id, talk_content, mz_percent):
     r.set(redis_key, result.encode('utf-8'))
 
     if r.exists("mz_percent"):
-        existing_value = float(r.get(redis_key))
+        existing_value = float(r.get("mz_percent"))
         count_key = 'count'
         conversation_count = int(r.get(count_key))
         mz_percent = (existing_value * conversation_count + mz_percent) / (conversation_count + 1)
 
-    r.set(redis_key, mz_percent)
+    r.set('mz_percent', mz_percent)
     feedback_count += 1
 
     channel_layer = get_channel_layer()
@@ -185,4 +186,39 @@ def get_gpt_feedback(choice_content, episode_id, talk_content, mz_percent):
             'message': result,
         }
     )
+    return result
+
+
+@shared_task
+def get_gpt_result():
+    r = redis.Redis(host='redis', port=6379, db=0)
+    feedback_keys = r.keys('feedback*')
+    feedback_values = [r.get(key).decode('utf-8') for key in feedback_keys]
+    feedback_values_str = ', '.join(feedback_values)
+    mz_percent = round(float(r.get('mz_percent').decode('utf-8')))
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "system",
+                "content": f"""
+                                    You're the kind of guy that grandfathers say, "예끼 이놈아 무슨소리냐"\
+                                    You must speak in that way.\
+                                    You are the one who looks at what the self-centered, tactless and rude mz employee said and points out what went wrong.\
+                                    {feedback_values_str}, Look at those feedbacks and write the final feedback.\
+                                    Feedback means scolding a person for what he or she did well and what he or she didn't do in his or her answer and telling him or her how to say it.\
+                                    You must provide answer in Korean.\
+                                    Don't generate the questions given earlier, just generate the answers.\
+                                    When you generating an answer, don't explain the answer or question in advance, just create an answer.\
+                                    Generate answers in 300 Korean characters.\
+                                    When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
+                                """
+            },
+        ],
+    )
+
+    result = {
+        'result': response.choices[0].message['content'].strip(),
+        'mz_percent': mz_percent,
+    }
     return result
