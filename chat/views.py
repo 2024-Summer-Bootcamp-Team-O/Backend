@@ -8,7 +8,8 @@ from django.db.models.functions import Random
 from .models import character,episode
 
 from .serializers import AnswerSerializer
-from  .serializers import ChatRoomSerializer
+from .serializers import ChatRoomSerializer
+
 
 # episode 랜덤 함수
 def get_random_episode_id(episode_time_id):
@@ -65,6 +66,7 @@ class CreateChatRoomView(APIView):
                                     status=status.HTTP_400_BAD_REQUEST)
         else:
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AnswerView(APIView):
     # authentication_classes = [JWTAuthentication]

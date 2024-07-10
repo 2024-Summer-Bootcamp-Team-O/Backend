@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import chat_room,character,user
 
+
 class ChatRoomSerializer(serializers.ModelSerializer):
     character_id = serializers.IntegerField(write_only=True)
     user_id = serializers.IntegerField(write_only=True)
@@ -8,6 +9,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = chat_room
         fields = ['user_id','character_id']
+
     def create(self, validated_data):
         character_id = validated_data.pop('character_id')
         user_id = validated_data.pop('user_id')
