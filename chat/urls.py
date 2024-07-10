@@ -6,5 +6,5 @@ appname = "chat"
 
 urlpatterns = [
     path('answers', views.AnswerView.as_view(), name='choice'),
-    path('start', CreateChatRoomView.as_view(), name='start_chat')
+    path('start', views.CreateChatRoomView.as_view(), name='start_chat')
 ]
