@@ -1,44 +1,71 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+# consumers.py
+import redis
+from asgiref.sync import async_to_sync
+from channels.generic.websocket import WebsocketConsumer
 import json
 
 
-class ChatConsumer(AsyncWebsocketConsumer):
+class ChatConsumer(WebsocketConsumer):
 
-    async def connect(self):
+    def connect(self):
         self.room_group_name = 'chat_room'
 
         # Join room group
-        await self.channel_layer.group_add(
+        async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
         )
 
-        await self.accept()
+        self.accept()
 
-    async def disconnect(self, close_code):
+    def disconnect(self, close_code):
         # Leave room group
-        await self.channel_layer.group_discard(
+        async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
         )
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json.get('message')
-
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
-
-    async def chat_message(self, event):
+    def gpt_talk_message(self, event):
         message = event['message']
+        message_type = event['type']
+        self.send(text_data=json.dumps({
+            'message': message,
+            'type': message_type
+        }))
 
-        # WebSocket으로 메시지 전송
-        await self.send(text_data=json.dumps({
-            'message': message
+    def gpt_choice_message(self, event):
+        message_type = event['type']
+        messages = event['message']['employee']
+        employee_choices = {}
+        for message in messages:
+            choices = message.split('\n')
+            for choice in choices:
+                mz_split = choice.split('mz:')
+                if len(mz_split) > 1:
+                    percentage = mz_split[0].strip()
+                    employee_choices[percentage] = mz_split[1].strip()
+
+        message = {
+            'message': employee_choices,
+            'type': type
+        }
+        self.send(text_data=json.dumps({
+            'message': message['message'],
+            'type': message_type
+        }))
+
+    def gpt_answer_message(self, event):
+        message = event['message']
+        message_type = event['type']
+        self.send(text_data=json.dumps({
+            'message': message,
+            'type': message_type
+        }))
+
+    def gpt_feedback_message(self, event):
+        message = event['message']
+        message_type = event['type']
+        self.send(text_data=json.dumps({
+            'message': message,
+            'type': message_type
         }))

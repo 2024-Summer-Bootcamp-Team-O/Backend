@@ -25,7 +25,7 @@ def get_gpt_message(charcater_id, episode_id):
         work = "subordinate"
     else:
         work = "part-timer"
-    response = openai.ChatCompletion.create(
+    stream = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
             {
@@ -42,24 +42,30 @@ def get_gpt_message(charcater_id, episode_id):
                             """
             },
         ],
+        stream=True
     )
-    result = response.choices[0].message['content'].strip()
     r = redis.Redis(host='redis', port=6379, db=0)
-    get_gpt_choice.delay(result, episode_id)
     redis_key = "talk_content"
     if r.exists(redis_key):
         r.delete(redis_key)
-    r.set(redis_key, result.encode('utf-8'))
+    full_response = ""
+    for response in stream:
+        if 'delta' in response.choices[0] and 'content' in response.choices[0]['delta']:
+            result = response.choices[0]['delta']['content']
+            full_response += result
 
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'chat_room',
-        {
-            'type': 'gpt_talk_message',
-            'message': result,
-        }
-    )
-    return result
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'chat_room',
+                {
+                    'type': 'gpt_talk_message',
+                    'message': result,
+                }
+            )
+
+    r.set(redis_key, full_response.encode('utf-8'))
+    get_gpt_choice.delay(full_response, episode_id)
+    return full_response
 
 
 @shared_task
@@ -81,7 +87,12 @@ def get_gpt_choice(talk_content, episode_id):
                                 When you generating an answer, don't explain the answer or question in advance, just create an answer.\
                                 For each answer, generate an answer with 20 Korean characters.\
                                 When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
-                                Don't add any other values, please write 0% mz, 30% mz, 60% mz, 100% mz in order.\
+                                Don't add any other values.\
+                                But, Respond to the situation according to the following format:
+                                    0% mz: choice1
+                                    30% mz: choice2
+                                    60% mz: choice3
+                                    100% mz: choice4\
                             """
             },
         ],
@@ -107,7 +118,7 @@ def get_gpt_choice(talk_content, episode_id):
 def get_gpt_answer(choice_content, chracater_id, episode_id, talk_content, mz_percent):
     character_script = character.objects.get(character_id=chracater_id).character_script
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
-    response = openai.ChatCompletion.create(
+    stream = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
             {
@@ -124,18 +135,22 @@ def get_gpt_answer(choice_content, chracater_id, episode_id, talk_content, mz_pe
                             """
             },
         ],
+        stream=True
     )
-    result = response.choices[0].message['content'].strip()
+    for response in stream:
+        if 'delta' in response.choices[0] and 'content' in response.choices[0]['delta']:
+            result = response.choices[0]['delta']['content'].strip()
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'chat_room',
+                {
+                    'type': 'gpt_answer_message',
+                    'message': result,
+                }
+            )
     get_gpt_feedback.delay(choice_content, episode_id, talk_content, mz_percent)
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'chat_room',
-        {
-            'type': 'gpt_answer_message',
-            'message': result,
-        }
-    )
-    return result
+    return "Task completed"
 
 
 @shared_task
