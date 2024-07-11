@@ -1,14 +1,14 @@
+import random
 import requests
+import redis
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from django.db.models.functions import Random
-from .models import character,episode
-
-from .serializers import AnswerSerializer
-from .serializers import ChatRoomSerializer
+from .models import character, episode
+from .serializers import AnswerSerializer, ChatRoomSerializer
 
 
 # episode 랜덤 함수
@@ -24,11 +24,13 @@ class CreateChatRoomView(APIView):
         request_body=ChatRoomSerializer,
         operation_id='대화시작 시 캐릭터 정보를 저장하고 상황을 랜덤 배정하는 API',
     )
-    def post(self, request,*args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = ChatRoomSerializer(data=request.data)
         if serializer.is_valid():
             # 데이터베이스에 직렬화하여 저장
             chat_room_instance = serializer.save()
+            r = redis.Redis(host='redis', port=6379, db=0)
+            r.set('room_id', chat_room_instance.room_id)
 
             # 저장된 데이터에서 character_id 추출
             character_id = chat_room_instance.character.character_id
@@ -37,12 +39,13 @@ class CreateChatRoomView(APIView):
             character_instance = character.objects.get(character_id=character_id)
             work_id = character_instance.work.work_id
 
-            if work_id == 1:  # 회사일 때
+
+            if work_id == 1: # 회사일 때
                 # episode_time_id = 1(출근)인 episode 객체의 episode_id 값 랜덤으로 가져오기
                 episode_id = get_random_episode_id(1)
-            else:  # 알바일 때
-                # episode_time_id = 5(고기집)인 episode 객체의 episode_id 값 랜덤으로 가져오기
-                episode_id = get_random_episode_id(5)
+            else: # 알바일 때
+                # episode_time_id = 6(고깃집)인 episode 객체의 episode_id 값 랜덤으로 가져오기
+                episode_id = get_random_episode_id(6)
 
             if episode_id is not None:
                 # GPT Message API 호출
@@ -97,3 +100,47 @@ class AnswerView(APIView):
                 return JsonResponse(response.json(), status=response.status_code)
         else:
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_next_episode_time_id(work_id, count):
+    if work_id == 1:
+        return count + 1
+    else:
+        return count + 5
+
+
+class NextEpisodeView(APIView):
+    @swagger_auto_schema(
+        operation_id='다음 상황을 랜덤 제공하는 API',
+    )
+    def get(self, request, character_id=None):
+        r = redis.Redis(host='redis', port=6379, db=0)
+        character_id = r.get('character_id').decode('utf-8')
+        work_id = character.objects.get(character_id=character_id).work_id
+
+        if not character_id:
+            return JsonResponse({'error': 'character_id not found in Redis'}, status=status.HTTP_400_BAD_REQUEST)
+
+        count = int(r.get('count'))
+        next_episode_time_id = get_next_episode_time_id(work_id, count)
+        next_episode_id = get_random_episode_id(next_episode_time_id)
+
+        url = request.build_absolute_uri(reverse('gpt:gpt-message'))
+        payload = {
+            "character_id": character_id,
+            "episode_id": next_episode_id
+        }
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == status.HTTP_202_ACCEPTED:
+            return JsonResponse({
+                'character_id': character_id,
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return JsonResponse(response.json(), status=response.status_code)
+
+
+
+

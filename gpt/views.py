@@ -55,6 +55,7 @@ class GetGPTAnswerView(APIView):
             talk_content = r.get('talk_content').decode('utf-8')
 
             result = get_gpt_answer.delay(choice_content, character_id, episode_id, talk_content, mz_percent)
+
             return JsonResponse({'task_id': result.task_id}, status=status.HTTP_202_ACCEPTED)
         else:
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
