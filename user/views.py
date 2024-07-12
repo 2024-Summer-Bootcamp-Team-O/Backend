@@ -22,7 +22,10 @@ class UserRegistrationView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"message": "회원가입에 성공하였습니다."}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "회원가입에 성공하였습니다."},
+                status=status.HTTP_201_CREATED,
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -32,7 +35,7 @@ class CheckUserEmailView(APIView):
         operation_id="이메일 중복 확인 API",
         manual_parameters=[
             openapi.Parameter(
-                "member_email",
+                "email",
                 openapi.IN_QUERY,
                 description="중복 확인할 이메일",
                 type=openapi.TYPE_STRING,
@@ -42,8 +45,8 @@ class CheckUserEmailView(APIView):
         responses={200: "사용 가능한 이메일입니다", 409: "이미 존재하는 이메일입니다"},
     )
     def get(self, request, *args, **kwargs):
-        user_email = request.query_params.get("member_email")
-        if user.objects.filter(user_email=user_email).exists():
+        email = request.query_params.get("email")
+        if user.objects.filter(email=email).exists():
             return Response(
                 {"message": "이미 존재하는 이메일입니다"},
                 status=status.HTTP_409_CONFLICT,
@@ -83,8 +86,7 @@ class LogoutView(APIView):
             required=["refresh"],
             properties={
                 "refresh": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="리프레시 토큰"
+                    type=openapi.TYPE_STRING, description="리프레시 토큰"
                 ),
             },
         ),
@@ -94,12 +96,17 @@ class LogoutView(APIView):
         },
     )
     def post(self, request):
-        refresh_token = request.data.get('refresh')
+        refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response({"message": "리프레시 토큰이 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "리프레시 토큰이 필요합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         token = RefreshToken(refresh_token)
         token.blacklist()
-        return Response({"message": "로그아웃되었습니다."}, status=status.HTTP_205_RESET_CONTENT)
+        return Response(
+            {"message": "로그아웃되었습니다."}, status=status.HTTP_205_RESET_CONTENT
+        )
 
 
 # 해당 API는 JWT 예시를 보여주기 위한 코드입니다.
@@ -119,17 +126,16 @@ class ProfileView(APIView):
         ],
     )
     def get(self, request):
-        member = request.user
         return Response(
             {
-                "member_email": member.user_email,
-                "member_name": member.user_name,
+                "email": request.user.email,
+                "name": request.user.name,
             },
             status=status.HTTP_200_OK,
         )
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == "GET":
             self.authentication_classes = [JWTAuthentication]
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
