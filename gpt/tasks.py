@@ -12,6 +12,7 @@ from chat.models import character, episode
 load_dotenv()
 openai.api_key = os.environ.get("GPT_API_KEY")
 feedback_count = 1
+r = redis.Redis(host='redis', port=6379, db=0)
 
 
 # 대사 제공과 동시에 선택지 제공
@@ -20,18 +21,13 @@ def get_gpt_message(charcater_id, episode_id):
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
     characters = character.objects.get(character_id=charcater_id)
     character_script = characters.character_script
-    work_id = characters.work_id
-    if(work_id == 1):
-        work = "subordinate"
-    else:
-        work = "part-timer"
     stream = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
             {
                 "role": "system",
                 "content": f"""
-                                You are character with {character_script} when a {work} who is dealing with is {episode_content}.\
+                                You are character with {character_script} when a subordinate who is dealing with is {episode_content}.\
                                 What are you going to say in this situation?\
                                 You must provide answer in Korean.\
                                 You have to speak according to your personality unconditionally.\
@@ -44,10 +40,11 @@ def get_gpt_message(charcater_id, episode_id):
         ],
         stream=True
     )
-    r = redis.Redis(host='redis', port=6379, db=0)
-    redis_key = "talk_content"
-    if r.exists(redis_key):
-        r.delete(redis_key)
+    if r.exists("episode_id"):
+        r.delete("episode_id")
+    r.set("episode_id", episode_id)
+    if r.exists("talk_content"):
+        r.delete("talk_content")
     full_response = ""
     for response in stream:
         if 'delta' in response.choices[0] and 'content' in response.choices[0]['delta']:
@@ -63,60 +60,17 @@ def get_gpt_message(charcater_id, episode_id):
                 }
             )
 
-    r.set(redis_key, full_response.encode('utf-8'))
-    get_gpt_choice.delay(full_response, episode_id)
+    r.set("talk_content", full_response.encode('utf-8'))
     return full_response
-
-
-@shared_task
-def get_gpt_choice(talk_content, episode_id):
-    episode_content = episode.objects.get(episode_id=episode_id).episode_content
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-                                You are mz employee.\
-                                mz means egocentric, tactless, and rude.\
-                                If {episode_content}, Give me 4 options 0% mz, 30% mz, 60% mz, 100% mz when you heared {talk_content}\
-                                The options should be clearly distinguished by percentage, so don't be ambiguous\
-                                You must provide answer in Korean.\
-                                You have to answer by % to match the characteristics of mz.\
-                                Don't generate the questions given earlier, just generate the answers.\
-                                When you generating an answer, don't explain the answer or question in advance, just create an answer.\
-                                For each answer, generate an answer with 20 Korean characters.\
-                                When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
-                                Don't add any other values.\
-                                But, Respond to the situation according to the following format:
-                                    0% mz: choice1
-                                    30% mz: choice2
-                                    60% mz: choice3
-                                    100% mz: choice4\
-                            """
-            },
-        ],
-    )
-    employee_choices = [message['message']['content'].strip() for message in response.choices]
-
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'chat_room',
-        {
-            'type': 'gpt_choice_message',
-            'message': {
-                'employee': employee_choices,
-            },
-        }
-    )
-
-    return employee_choices
 
 
 # 답변과 동시에 피드백 제공
 @shared_task
-def get_gpt_answer(choice_content, chracater_id, episode_id, talk_content, mz_percent):
-    character_script = character.objects.get(character_id=chracater_id).character_script
+def get_gpt_answer(choice_content):
+    talk_content = r.get("talk_content").decode('utf-8')
+    episode_id = r.get("episode_id").decode('utf-8')
+    character_id = r.get("character_id").decode('utf-8')
+    character_script = character.objects.get(character_id=character_id).character_script
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
     stream = openai.ChatCompletion.create(
         model="gpt-4o",
@@ -149,12 +103,11 @@ def get_gpt_answer(choice_content, chracater_id, episode_id, talk_content, mz_pe
                     'message': result,
                 }
             )
-    get_gpt_feedback.delay(choice_content, episode_id, talk_content, mz_percent)
     return "Task completed"
 
 
 @shared_task
-def get_gpt_feedback(choice_content, episode_id, talk_content, mz_percent):
+def get_gpt_feedback(choice_content, episode_id, talk_content):
     global feedback_count
     episode_content = episode.objects.get(episode_id=episode_id).episode_content
     response = openai.ChatCompletion.create(
@@ -180,17 +133,9 @@ def get_gpt_feedback(choice_content, episode_id, talk_content, mz_percent):
         ],
     )
     result = response.choices[0].message['content'].strip()
-    r = redis.Redis(host='redis', port=6379, db=0)
     redis_key = f"feedback{feedback_count}"
     r.set(redis_key, result.encode('utf-8'))
 
-    if r.exists("mz_percent"):
-        existing_value = float(r.get("mz_percent"))
-        count_key = 'count'
-        conversation_count = int(r.get(count_key))
-        mz_percent = (existing_value * conversation_count + mz_percent) / (conversation_count + 1)
-
-    r.set('mz_percent', mz_percent)
     feedback_count += 1
 
     channel_layer = get_channel_layer()
@@ -206,11 +151,9 @@ def get_gpt_feedback(choice_content, episode_id, talk_content, mz_percent):
 
 @shared_task
 def get_gpt_result():
-    r = redis.Redis(host='redis', port=6379, db=0)
     feedback_keys = r.keys('feedback*')
     feedback_values = [r.get(key).decode('utf-8') for key in feedback_keys]
     feedback_values_str = ', '.join(feedback_values)
-    mz_percent = round(float(r.get('mz_percent').decode('utf-8')))
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
@@ -234,6 +177,5 @@ def get_gpt_result():
 
     result = {
         'result': response.choices[0].message['content'].strip(),
-        'mz_percent': mz_percent,
     }
     return result

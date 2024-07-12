@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with GPT</title>
+</head>
+<body>
+    <h2>Chat with GPT</h2>
+    <div id="chat-log"></div>
+    <input id="chat-message" type="text">
+    <button id="send">send</button>
+    <button id="chat-message-submit">start</button>
+    <button id="chat-answer-submit">Answer</button>
+    <button id="chat-result-submit">Result</button>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const socket = new WebSocket("ws://" + window.location.host + "/ws/gpt/");
+
+            socket.onopen = function() {
+                console.log("WebSocket connection opened.");
+            };
+
+            socket.onclose = function(e) {
+                console.error("Chat socket closed unexpectedly");
+            };
+
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log("Received data:", data);  // 디버깅 출력
+                const message = data.message;
+                const messageType = data.type;
+
+                const chatLog = document.getElementById("chat-log");
+
+                if (messageType === "gpt_choice_message") {
+                    const choices = message; // Assuming message is already in the desired format
+                    const choiceList = Object.keys(choices).map(key => choices[key]);
+
+                    choiceList.forEach((choice, index) => {
+                        const choiceElement = document.createElement("div");
+                        choiceElement.textContent = `[CHOICE ${index}]: ${choice}`;
+                        choiceElement.style.color = "green";
+                        chatLog.appendChild(choiceElement);
+                    });
+                } else if (messageType === "gpt_talk_message" || messageType === "gpt_answer_message") {
+                    const messageElement = document.createElement("div");
+                    messageElement.style.display = "inline-block";  // 각 문자를 한 줄에 출력하기 위해 inline-block 스타일 설정
+                    if(messageType === "gpt_talk_message")
+                        messageElement.style.color = "blue"; // 파란색으로 설정
+                    else if(messageType === "gpt_answer_message")
+                        messageElement.style.color = "red";
+                    for (let i = 0; i < message.length; i++) {
+                        setTimeout(() => {
+                            messageElement.textContent += message[i];
+                        }, i * 50); // 50ms 간격으로 한 글자씩 추가
+                    }
+
+                    chatLog.appendChild(messageElement);
+                }
+                else {
+                    const messageElement = document.createElement("div");
+                    messageElement.textContent = `[${messageType.toUpperCase()}] ${message}`;
+                    switch (messageType) {
+                        case 'gpt_feedback_message':
+                            messageElement.style.color = "purple";
+                            break;
+                        default:
+                            messageElement.style.color = "black";
+                    }
+                    chatLog.appendChild(messageElement);
+                }
+            };
+
+            const chatMessageSubmit = document.getElementById("chat-message-submit");
+            const chatResultSubmit = document.getElementById("chat-result-submit");
+            const send = document.getElementById("send");
+
+            send.onclick = function(e) {
+                const input = document.getElementById("chat-message").value;
+                const message = {
+                    message: input,
+                    type: "user_message"
+                };
+                socket.send(JSON.stringify(message));
+            };
+
+            chatMessageSubmit.onclick = function(e) {
+                // Send the message to the API
+                fetch("start", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        character_id: 4,
+                        user_id: 1
+                    })
+                });
+            };
+
+            chatResultSubmit.onclick = function(e) {
+                // Send the message to the API
+                fetch("/gpts/results", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();  // JSON 형식으로 응답 데이터를 파싱
+                })
+                .then(data => {
+                    console.log('Success:', data);  // 성공적으로 데이터를 받아왔을 때 처리
+                    const chatLog = document.getElementById("chat-log");
+                    const messageElement = document.createElement("div");
+                    messageElement.textContent = data["result"];
+                    messageElement.style.color = "black";
+                    chatLog.appendChild(messageElement);  // 채팅 로그에 메시지 추가
+                })
+            };
+        });
+    </script>
+</body>
+</html>

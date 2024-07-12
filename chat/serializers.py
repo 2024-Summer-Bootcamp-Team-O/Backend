@@ -18,7 +18,3 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         chat_room_instance = chat_room.objects.create(character=character_instance, user=user_instance, **validated_data)
         return chat_room_instance
 
-
-class AnswerSerializer(serializers.Serializer):
-    choice_content = serializers.CharField(max_length=1000)
-    mz_percent = serializers.IntegerField()

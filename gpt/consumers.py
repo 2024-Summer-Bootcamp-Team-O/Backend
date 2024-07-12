@@ -3,6 +3,7 @@ import redis
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
+from gpt.tasks import get_gpt_answer
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -24,6 +25,10 @@ class ChatConsumer(WebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+
+    def receive(self, text_data):
+        input_data = json.loads(text_data)
+        get_gpt_answer.delay(input_data['message'])
 
     def gpt_talk_message(self, event):
         message = event['message']

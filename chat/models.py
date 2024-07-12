@@ -2,20 +2,8 @@ from django.db import models
 from user.models import user
 
 
-class work(models.Model):
-    work_id = models.AutoField(primary_key=True)
-    work_location = models.CharField(max_length=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return self.work_location
-
-
 class character(models.Model):
     character_id = models.AutoField(primary_key=True)
-    work = models.ForeignKey(work, on_delete=models.CASCADE)
     character_name = models.CharField(max_length=20)
     character_script = models.CharField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -41,7 +29,6 @@ class episode(models.Model):
     episode_id = models.AutoField(primary_key=True)
     episode_content = models.CharField(max_length=200)
     episode_time = models.ForeignKey(episode_time, on_delete=models.CASCADE)
-    work = models.ForeignKey(work, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -62,3 +49,15 @@ class chat_room(models.Model):
 
     def __str__(self):
         return str(self.room_id)
+
+
+class chat_episode(models.Model):
+    chat_episode_id = models.AutoField(primary_key=True)
+    chat_room = models.ForeignKey(chat_room, on_delete=models.CASCADE)
+    episode = models.ForeignKey(episode, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.chat_episode_id)
