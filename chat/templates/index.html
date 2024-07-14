@@ -7,10 +7,10 @@
     <h2>Chat with GPT</h2>
     <div id="chat-log"></div>
     <input id="chat-message" type="text">
-    <button id="send">send</button>
-    <button id="chat-message-submit">start</button>
-    <button id="chat-answer-submit">Answer</button>
-    <button id="chat-result-submit">Result</button>
+    <button id="chat-message-submit">전송</button>
+    <button id="chat-start-submit">채팅 시작</button>
+    <button id="chat-next-submit">다음 에피소드</button>
+    <button id="chat-result-submit">결과</button>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const socket = new WebSocket("ws://" + window.location.host + "/ws/gpt/");
@@ -72,18 +72,27 @@
 
             const chatMessageSubmit = document.getElementById("chat-message-submit");
             const chatResultSubmit = document.getElementById("chat-result-submit");
-            const send = document.getElementById("send");
+            const chatStartSubmit = document.getElementById("chat-start-submit");
+            const chatNextSubmit = document.getElementById("chat-next-submit");
 
-            send.onclick = function(e) {
+            chatMessageSubmit.onclick = function(e) {
                 const input = document.getElementById("chat-message").value;
                 const message = {
                     message: input,
                     type: "user_message"
                 };
+
+                // 사용자의 메시지를 채팅 로그에 추가
+                const chatLog = document.getElementById("chat-log");
+                const userMessageElement = document.createElement("div");
+                userMessageElement.textContent = `USER: ${input}`;
+                userMessageElement.style.color = "black";
+                chatLog.appendChild(userMessageElement);
+
                 socket.send(JSON.stringify(message));
             };
 
-            chatMessageSubmit.onclick = function(e) {
+            chatStartSubmit.onclick = function(e) {
                 // Send the message to the API
                 fetch("start", {
                     method: "POST",
@@ -91,9 +100,19 @@
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        character_id: 4,
+                        character_id: 3,
                         user_id: 1
                     })
+                });
+            };
+
+            chatNextSubmit.onclick = function(e) {
+                // Send the message to the API
+                fetch("next", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 });
             };
 

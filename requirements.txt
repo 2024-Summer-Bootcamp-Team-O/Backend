@@ -14,3 +14,4 @@ channels-redis==3.3.0
 openai==0.28.0
 redis==5.0.0b2
 requests==2.26.0
+langChain==0.1.0
