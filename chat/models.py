@@ -18,9 +18,9 @@ class voice(models.Model):
     id = models.AutoField(primary_key=True)
     code = models.CharField(max_length=200)
     character = models.ForeignKey(character, on_delete=models.CASCADE)
-    stability = models.IntegerField(max_length=20)
-    similarity = models.IntegerField(max_length=20)
-    style = models.IntegerField(max_length=20)
+    stability = models.FloatField()
+    similarity = models.FloatField()
+    style = models.FloatField()
 
     def __str__(self):
         return str(self.id)
