@@ -130,8 +130,22 @@ class ResultChatView(APIView):
         # Redis 지우기
         r.flushall()
 
-        return JsonResponse(
-            {"result": result_data.get("result", "")}, status=status.HTTP_200_OK
+        return JsonResponse({"result": result_data.get("result", "")}, status=status.HTTP_200_OK)
+
+
+def get_gpt_result(request):
+    url = request.build_absolute_uri(reverse("gpt:gpt-result"))
+    headers = {
+        "Content-Type": "application/json",
+    }
+    return requests.get(url, headers=headers)
+
+    response = get_gpt_feedback(request)
+
+    if response.status_code == status.HTTP_202_ACCEPTED:
+        return Response(
+                "피드백이 생성되었습니다.",
+                status=status.HTTP_201_CREATED,
         )
 
 
