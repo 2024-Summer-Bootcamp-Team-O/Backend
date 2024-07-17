@@ -14,5 +14,4 @@ urlpatterns = [
     path('profile', views.ProfileView.as_view(), name='profile'),
     path('results', views.UserResultView.as_view(), name='result'),
     path('results/<int:room_id>', views.DeleteUserResultView.as_view(), name='delete-result'),
-
 ]

@@ -151,7 +151,7 @@ class UserResultView(APIView):
     )
     def get(self, request):
         try:
-            chat_room_instance = chat_room.objects.get(user_id=1) # user_id 하드코딩-> 수정필요
+            chat_room_instance = chat_room.objects.get(user_id=1) # user_id 하드코딩-> 수정필요함
 
             result = chat_room_instance.result
             room_id = chat_room_instance.id
