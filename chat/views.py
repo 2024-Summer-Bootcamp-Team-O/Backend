@@ -1,5 +1,6 @@
 import requests
 import redis
+from rest_framework.response import Response
 from django.http import JsonResponse
 from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
@@ -83,10 +84,12 @@ class GetFeedbackView(APIView):
         operation_id="GPT의 피드백을 가져오는 API",
     )
     def get(self, request):
-        result = get_gpt_feedback(request)
-        return JsonResponse(
-            {"task_id": result.task_id}, status=status.HTTP_202_ACCEPTED
-        )
+        response = get_gpt_feedback(request)
+        if response.status_code == status.HTTP_202_ACCEPTED:
+            return Response(
+                "피드백이 생성되었습니다.",
+                status=status.HTTP_201_CREATED,
+            )
 
 
 def get_next_episode_time_id(count):

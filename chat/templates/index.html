@@ -15,6 +15,9 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const socket = new WebSocket("ws://" + window.location.host + "/ws/gpt/");
+            let audioContext = new AudioContext();
+            let audioBufferQueue = [];
+            let isPlaying = false;
 
             socket.onopen = function() {
                 console.log("WebSocket connection opened.");
@@ -33,7 +36,7 @@
                 const chatLog = document.getElementById("chat-log");
 
                 if (messageType === "gpt_choice_message") {
-                    const choices = message; // Assuming message is already in the desired format
+                    const choices = message;
                     const choiceList = Object.keys(choices).map(key => choices[key]);
 
                     choiceList.forEach((choice, index) => {
@@ -56,8 +59,9 @@
                     }
 
                     chatLog.appendChild(messageElement);
-                }
-                else {
+                } else if (messageType === "audio") {
+                    playAudio(data.audio_chunk);
+                } else {
                     const messageElement = document.createElement("div");
                     messageElement.textContent = `[${messageType.toUpperCase()}] ${message}`;
                     switch (messageType) {
@@ -70,6 +74,29 @@
                     chatLog.appendChild(messageElement);
                 }
             };
+
+            async function playAudio(base64Audio) {
+                const audioData = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0)).buffer;
+                const audioBuffer = await audioContext.decodeAudioData(audioData);
+                audioBufferQueue.push(audioBuffer);
+                if (!isPlaying) {
+                    playAudioQueue();
+                }
+            }
+
+            async function playAudioQueue() {
+                if (audioBufferQueue.length === 0) {
+                    isPlaying = false;
+                    return;
+                }
+                isPlaying = true;
+                const buffer = audioBufferQueue.shift();
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.onended = playAudioQueue;
+                source.start();
+            }
 
             const chatMessageSubmit = document.getElementById("chat-message-submit");
             const chatResultSubmit = document.getElementById("chat-result-submit");

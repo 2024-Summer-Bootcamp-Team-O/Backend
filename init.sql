@@ -103,3 +103,26 @@ VALUES ('꼰대 남자 상사', 'He is a 50-year-old Korean IT Manager, is highl
 
 INSERT INTO chat_character (name, script, created_at, updated_at, deleted_at)
 VALUES ('꼰대 여자 상사', 'She is a 50-year-old Korean IT Manager, is highly experienced but extremely old-fashioned. She excels in performance but is conservative, rigid, and resistant to change and new technologies. She believes her methods are the best and frequently bullies subordinates. Her traditionalist views make her dismissive and often harsh, yet she shows favoritism to loyal employees, highlighting her hypocritical nature.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO chat_character (name, script, created_at, updated_at, deleted_at)
+VALUES ('피드백 요정', 'You''re the kind of guy that grandfathers say, "예끼 이놈아 무슨소리냐". You must speak in that way. You are the one who looks at what the self-centered, tactless and rude mz employee said and points out what went wrong.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (1,'BfcGhJA47qS2mWru2DkU', 0.4, 0.9, 0.24, 1 );
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (2,'PVuAiTOYd7Jhxu8rU5tQ', 0.5, 0.75, 0.09, 2);
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (3,'q4EulxCcoHnpxMUm251h', 0.52, 1, 0.16, 3);
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (4,'ywgMcCCP2BWR0jl5CIKf', 0.5, 1, 0.26, 4);
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (5,'J1a7j0xCpsDiL2SwNy5y', 0.5, 0.75, 0, 5);
+
+INSERT INTO chat_voice (id, code, similarity, stability, style, character_id)
+VALUES (6,'2bxA9G4srbv8QVdjetUu', 0.31, 0.91, 0.09, 6);
+
+
