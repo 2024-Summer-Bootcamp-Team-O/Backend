@@ -87,7 +87,6 @@ class GetGPTResultView(APIView):
         operation_id="GPT의 최종 피드백을 가져오는 API",
     )
     def get(self, request):
-        get_gpt_feedback()
         reponse = get_gpt_result()
         result = {"result": reponse}
         return JsonResponse(result, status=status.HTTP_200_OK)
