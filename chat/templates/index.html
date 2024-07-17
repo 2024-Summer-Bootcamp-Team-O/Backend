@@ -9,6 +9,7 @@
     <input id="chat-message" type="text">
     <button id="chat-message-submit">전송</button>
     <button id="chat-start-submit">채팅 시작</button>
+    <button id="chat-feedback-submit">피드백</button>
     <button id="chat-next-submit">다음 에피소드</button>
     <button id="chat-result-submit">결과</button>
     <script>
@@ -74,6 +75,7 @@
             const chatResultSubmit = document.getElementById("chat-result-submit");
             const chatStartSubmit = document.getElementById("chat-start-submit");
             const chatNextSubmit = document.getElementById("chat-next-submit");
+            const chatFeedbackSubmit = document.getElementById("chat-feedback-submit");
 
             chatMessageSubmit.onclick = function(e) {
                 const input = document.getElementById("chat-message").value;
@@ -103,6 +105,16 @@
                         character_id: 3,
                         user_id: 1
                     })
+                });
+            };
+
+            chatFeedbackSubmit.onclick = function(e) {
+                // Send the message to the API
+                fetch("feedbacks", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 });
             };
 

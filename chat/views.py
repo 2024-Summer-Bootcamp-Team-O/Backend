@@ -53,7 +53,6 @@ class NextEpisodeView(APIView):
         operation_id="다음 상황을 랜덤 제공하는 API",
     )
     def get(self, request):
-        get_gpt_feedback(request)
         character_id = r.get("character_id").decode("utf-8")
         room_id = int(r.get("room_id"))
         count = int(r.get("count"))
@@ -77,6 +76,17 @@ class NextEpisodeView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         return JsonResponse(response.json(), status=response.status_code)
+
+
+class GetFeedbackView(APIView):
+    @swagger_auto_schema(
+        operation_id="GPT의 피드백을 가져오는 API",
+    )
+    def get(self, request):
+        result = get_gpt_feedback(request)
+        return JsonResponse(
+            {"task_id": result.task_id}, status=status.HTTP_202_ACCEPTED
+        )
 
 
 def get_next_episode_time_id(count):
