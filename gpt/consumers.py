@@ -1,5 +1,3 @@
-# consumers.py
-import redis
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
@@ -30,32 +28,21 @@ class ChatConsumer(WebsocketConsumer):
 
     def gpt_talk_message(self, event):
         message = event["message"]
-        message_type = event["type"]
-        self.send(text_data=json.dumps({"message": message, "type": message_type}))
-
-    def gpt_choice_message(self, event):
-        message_type = event["type"]
-        messages = event["message"]["employee"]
-        employee_choices = {}
-        for message in messages:
-            choices = message.split("\n")
-            for choice in choices:
-                mz_split = choice.split("mz:")
-                if len(mz_split) > 1:
-                    percentage = mz_split[0].strip()
-                    employee_choices[percentage] = mz_split[1].strip()
-
-        message = {"message": employee_choices, "type": type}
         self.send(
-            text_data=json.dumps({"message": message["message"], "type": message_type})
+            text_data=json.dumps({"message": message, "type": "gpt_talk_message"})
         )
 
     def gpt_answer_message(self, event):
         message = event["message"]
-        message_type = event["type"]
-        self.send(text_data=json.dumps({"message": message, "type": message_type}))
+        self.send(
+            text_data=json.dumps({"message": message, "type": "gpt_answer_message"})
+        )
 
     def gpt_feedback_message(self, event):
         message = event["message"]
         message_type = event["type"]
         self.send(text_data=json.dumps({"message": message, "type": message_type}))
+
+    def gpt_audio(self, event):
+        audio_chunk = event["audio_chunk"]
+        self.send(text_data=json.dumps({"audio_chunk": audio_chunk, "type": "audio"}))

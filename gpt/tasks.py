@@ -8,10 +8,23 @@ from asgiref.sync import async_to_sync
 from dotenv import load_dotenv
 from langchain.memory import ConversationBufferMemory
 
-from chat.models import character, episode
+from chat.models import character, episode, voice
+
+from io import BytesIO
+from elevenlabs import VoiceSettings
+from elevenlabs.client import ElevenLabs
+from django.shortcuts import get_object_or_404
 
 memory = ConversationBufferMemory()
 load_dotenv()
+
+# 환경 변수에서 API 키를 가져옴.
+ELEVEN_LABS_API_KEY = os.getenv("ELEVEN_LABS_API_KEY")
+print(ELEVEN_LABS_API_KEY)
+
+# ElevenLabs 클라이언트를 초기화.
+client = ElevenLabs(api_key=ELEVEN_LABS_API_KEY)
+
 openai.api_key = os.environ.get("GPT_API_KEY")
 feedback_count = 1
 r = redis.Redis(host="redis", port=6379, db=0)
@@ -69,6 +82,9 @@ def get_gpt_message(charcater_id, episode_id):
         [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
     )
     r.set("conversation_history", conversation_history.encode("utf-8"))
+
+    text_to_speech_file(full_response, charcater_id)
+
     return full_response
 
 
@@ -120,6 +136,9 @@ def get_gpt_answer(user_message):
         [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
     )
     r.set("conversation_history", conversation_history.encode("utf-8"))
+
+    text_to_speech_file(full_response, character_id)
+
     return full_response
 
 
@@ -128,6 +147,8 @@ def get_gpt_feedback():
     global feedback_count
     episode_id = r.get("episode_id").decode("utf-8")
     episode_content = episode.objects.get(id=episode_id).content
+    character_id = 6 # 김수미로 고정
+    character_script = character.objects.get(id=character_id).script
     messages = memory.buffer_as_messages
     response = openai.ChatCompletion.create(
         model="gpt-4o",
@@ -136,10 +157,7 @@ def get_gpt_feedback():
                 "role": "system",
                 "content": f"""
                                 conversation : {messages}
-                                You're the kind of guy that grandfathers say, "예끼 이놈아 무슨소리냐"\
-                                You must speak in that way.\
-                                You are the one who looks at what the self-centered, tactless and rude mz employee said and points out what went wrong.\
-                                In {episode_content}, Look at this conversation and give the feedback.\
+                                You are character with {character_script}. In {episode_content}, Look at this conversation and give the feedback.\
                                 Give me feedback on the answer\
                                 You must give feedback only to user's answer.\
                                 Feedback means scolding a person for what he or she did well and what he or she didn't do in his or her answer and telling him or her how to say it.\
@@ -152,6 +170,7 @@ def get_gpt_feedback():
             },
         ],
     )
+
     result = response.choices[0].message["content"].strip()
     redis_key = f"feedback{feedback_count}"
     r.set(redis_key, result.encode("utf-8"))
@@ -166,6 +185,9 @@ def get_gpt_feedback():
             "message": result,
         },
     )
+
+    text_to_speech_file(result, character_id)
+
     return result
 
 
@@ -216,3 +238,50 @@ def load_memory():
 
         # 메모리에 메시지 추가
         memory.chat_memory.messages.extend(formatted_messages)
+
+
+@shared_task
+def text_to_speech_file(text: str, character_id: int) -> None:
+    from base64 import b64encode
+
+    # 해당 캐릭터의 음성세팅을 가져옴
+    voice_settings = get_object_or_404(voice, character_id=character_id)
+
+    # 텍스트를 음성으로 변환
+    response = client.text_to_speech.convert(
+        voice_id=f"{voice_settings.code}",
+        optimize_streaming_latency="0",
+        output_format="mp3_22050_32",
+        text=text,
+        model_id="eleven_multilingual_v2",
+        voice_settings=VoiceSettings(
+            stability=voice_settings.stability,
+            similarity_boost=voice_settings.similarity,
+            style=voice_settings.style,
+            use_speaker_boost=True,
+        ),
+    )
+
+    # 오디오 데이터를 메모리에 저장하기 위한 BytesIO 객체 생성
+    audio_stream = BytesIO()
+
+    # 각 오디오 데이터 청크를 스트림에 씀
+    for chunk in response:
+        if chunk:
+            audio_stream.write(chunk)
+
+    # 스트림 위치를 처음으로 재설정
+    audio_stream.seek(0)
+
+    # 오디오 데이터를 base64로 인코딩
+    encoded_audio = b64encode(audio_stream.read()).decode("utf-8")
+
+    # 음성 데이터를 WebSocket을 통해 전송
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "chat_room",
+        {
+            "type": "gpt_audio",
+            "audio_chunk": encoded_audio,
+        },
+    )
