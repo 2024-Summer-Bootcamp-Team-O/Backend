@@ -19,11 +19,10 @@ memory = ConversationBufferMemory()
 load_dotenv()
 
 # 환경 변수에서 API 키를 가져옴.
-ELEVEN_LABS_API_KEY = os.getenv("ELEVEN_LABS_API_KEY")
-print(ELEVEN_LABS_API_KEY)
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 # ElevenLabs 클라이언트를 초기화.
-client = ElevenLabs(api_key=ELEVEN_LABS_API_KEY)
+client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 openai.api_key = os.environ.get("GPT_API_KEY")
 feedback_count = 1
@@ -147,7 +146,7 @@ def get_gpt_feedback():
     global feedback_count
     episode_id = r.get("episode_id").decode("utf-8")
     episode_content = episode.objects.get(id=episode_id).content
-    character_id = 6 # 김수미로 고정
+    character_id = 6  # 김수미로 고정
     character_script = character.objects.get(id=character_id).script
     messages = memory.buffer_as_messages
     response = openai.ChatCompletion.create(

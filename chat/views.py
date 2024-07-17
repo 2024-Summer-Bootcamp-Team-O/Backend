@@ -92,37 +92,6 @@ class GetFeedbackView(APIView):
             )
 
 
-class ResultChatView(APIView):
-    @swagger_auto_schema(
-        operation_id="대화 종료 시 피드백을 출력하고 저장하는 API"
-    )
-    def get(self, request):
-        room_id = r.get("room_id")
-
-
-        if room_id is None:
-            return JsonResponse({'error': 'room_id not found in Redis'}, status=status.HTTP_400_BAD_REQUEST)
-
-        room_id = int(room_id)
-
-        # GPT 결과 요청
-        result_response = get_gpt_result(request)
-        if result_response.status_code != status.HTTP_200_OK:
-            return JsonResponse(result_response.json(), status=result_response.status_code)
-
-        result_data = result_response.json()
-
-        # 데이터베이스에 피드백 저장
-        chat_room_instance = chat_room.objects.get(id=room_id)
-        chat_room_instance.result = result_data.get("result", "")
-        chat_room_instance.save()
-
-        # Redis 지우기
-        r.flushall()
-
-        return JsonResponse({"result": result_data.get("result", "")}, status=status.HTTP_200_OK)
-
-
 def get_gpt_result(request):
     url = request.build_absolute_uri(reverse("gpt:gpt-result"))
     headers = {
@@ -132,48 +101,38 @@ def get_gpt_result(request):
 
 
 class ResultChatView(APIView):
-    @swagger_auto_schema(
-        operation_id="대화 종료 시 피드백을 출력하고 저장하는 API"
-    )
+    @swagger_auto_schema(operation_id="대화 종료 시 피드백을 출력하고 저장하는 API")
     def get(self, request):
         room_id = r.get("room_id")
 
-
         if room_id is None:
-            return JsonResponse({'error': 'room_id not found in Redis'}, status=status.HTTP_400_BAD_REQUEST)
-
-        room_id = int(room_id)
-
-        # GPT 결과 요청
-        result_response = get_gpt_result(request)
-        if result_response.status_code != status.HTTP_200_OK:
-            return JsonResponse(result_response.json(), status=result_response.status_code)
-
-        result_data = result_response.json()
-
-        # 데이터베이스에 피드백 저장
-        chat_room_instance = chat_room.objects.get(id=room_id)
-        chat_room_instance.result = result_data.get("result", "")
-        chat_room_instance.save()
-
-        # Redis 지우기
-        r.flushall()
-
-        return JsonResponse({"result": result_data.get("result", "")}, status=status.HTTP_200_OK)
-
-
-def get_gpt_result(request):
-    url = request.build_absolute_uri(reverse("gpt:gpt-result"))
-    headers = {
-        "Content-Type": "application/json",
-    }
-    return requests.get(url, headers=headers)
-        response = get_gpt_feedback(request)
-        if response.status_code == status.HTTP_202_ACCEPTED:
-            return Response(
-                "피드백이 생성되었습니다.",
-                status=status.HTTP_201_CREATED,
+            return JsonResponse(
+                {"error": "room_id not found in Redis"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        room_id = int(room_id)
+
+        # GPT 결과 요청
+        result_response = get_gpt_result(request)
+        if result_response.status_code != status.HTTP_200_OK:
+            return JsonResponse(
+                result_response.json(), status=result_response.status_code
+            )
+
+        result_data = result_response.json()
+
+        # 데이터베이스에 피드백 저장
+        chat_room_instance = chat_room.objects.get(id=room_id)
+        chat_room_instance.result = result_data.get("result", "")
+        chat_room_instance.save()
+
+        # Redis 지우기
+        r.flushall()
+
+        return JsonResponse(
+            {"result": result_data.get("result", "")}, status=status.HTTP_200_OK
+        )
 
 
 def get_next_episode_time_id(count):
