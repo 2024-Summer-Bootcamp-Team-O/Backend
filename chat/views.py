@@ -57,7 +57,6 @@ class NextEpisodeView(APIView):
         character_id = r.get("character_id").decode("utf-8")
         room_id = int(r.get("room_id"))
         count = int(r.get("count"))
-
         next_episode_time_id = get_next_episode_time_id(count)
         next_episode_id = get_random_episode_id(next_episode_time_id)
 
@@ -169,6 +168,12 @@ def get_gpt_result(request):
         "Content-Type": "application/json",
     }
     return requests.get(url, headers=headers)
+        response = get_gpt_feedback(request)
+        if response.status_code == status.HTTP_202_ACCEPTED:
+            return Response(
+                "피드백이 생성되었습니다.",
+                status=status.HTTP_201_CREATED,
+            )
 
 
 def get_next_episode_time_id(count):

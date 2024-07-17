@@ -170,6 +170,7 @@ def get_gpt_feedback():
             },
         ],
     )
+
     result = response.choices[0].message["content"].strip()
     redis_key = f"feedback{feedback_count}"
     r.set(redis_key, result.encode("utf-8"))
