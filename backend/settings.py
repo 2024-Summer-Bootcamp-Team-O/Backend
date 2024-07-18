@@ -1,5 +1,7 @@
 from pathlib import Path
 import os
+
+from django.core.files.storage import storages
 from dotenv import load_dotenv
 from datetime import timedelta
 import pymysql
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "channels",
     "django_celery_beat",
     "django_celery_results",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -59,7 +62,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "http://0.0.0.0:8000",
-    "http://localhost:5173"
+    "http://localhost:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -67,7 +70,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "http://0.0.0.0:8000",
-    "http://localhost:5173"
+    "http://localhost:5173",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -197,3 +200,14 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# AWS S3 settings
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_CUSTOM_DOMAIN = "%s.s3.%s.amazonaws.com" % (AWS_STORAGE_BUCKET_NAME, AWS_REGION)
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=86400",
+}
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"

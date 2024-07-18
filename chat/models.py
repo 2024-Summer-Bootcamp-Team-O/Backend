@@ -72,3 +72,15 @@ class chat_episode(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class photo(models.Model):
+    id = models.AutoField(primary_key=True)
+    chat_room = models.ForeignKey(chat_room, on_delete=models.CASCADE)
+    image_url = models.URLField(max_length=200, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)

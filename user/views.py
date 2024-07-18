@@ -143,49 +143,51 @@ class ProfileView(APIView):
         return super().get_permissions()
 
 
-
-#결과페이지 조회
+# 결과페이지 조회
 class UserResultView(APIView):
-    @swagger_auto_schema(
-        operation_id="사용자의 대화 결과를 조회하는 API"
-    )
+    @swagger_auto_schema(operation_id="사용자의 대화 결과를 조회하는 API")
     def get(self, request):
-        try:
-            chat_room_instance = chat_room.objects.get(user_id=1) # user_id 하드코딩-> 수정필요함
-
-            result = chat_room_instance.result
-            room_id = chat_room_instance.id
-
+        # TODO: 추후 user_id 변경 필요
+        user_id = 1
+        chat_room_instances = chat_room.objects.filter(user_id=user_id)
+        if chat_room_instances.exists():
             response_data = {
                 "status": "200",
                 "message": "결과 조회 성공",
                 "data": [
                     {
-                        "room_id": room_id,
-                        "result": result
+                        "room_id": room.id,
+                        "character_id": room.character_id,
+                        "name": room.user.name,
                     }
-                ]
+                    for room in chat_room_instances
+                ],
             }
             return Response(response_data, status=status.HTTP_200_OK)
-        except chat_room.DoesNotExist:
-            return Response({"status": "404", "message": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(
+                {
+                    "status": "200",
+                    "message": "No chat rooms found for the user",
+                    "data": [],
+                },
+                status=status.HTTP_200_OK,
+            )
+
 
 class DeleteUserResultView(APIView):
     @swagger_auto_schema(
-        operation_id="결과를 삭제하는 API",
-        responses={200: "삭제 성공"}
+        operation_id="결과를 삭제하는 API", responses={200: "삭제 성공"}
     )
-
     def delete(self, request, room_id):
         try:
             chat_room_instance = chat_room.objects.get(id=room_id)
             chat_room_instance.result = ""
             chat_room_instance.save()
-            response_data = {
-                "status": "200",
-                "message": "삭제 성공"
-            }
+            response_data = {"status": "200", "message": "삭제 성공"}
             return Response(response_data, status=status.HTTP_200_OK)
         except chat_room.DoesNotExist:
-            return Response({"status": "404", "message": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
-
+            return Response(
+                {"status": "404", "message": "Chat room not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )

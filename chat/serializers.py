@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import chat_room, character, user
+from .models import chat_room, character, user, photo
 
 
 class ChatRoomSerializer(serializers.ModelSerializer):
@@ -19,3 +19,11 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             character=character_instance, user=user_instance, **validated_data
         )
         return chat_room_instance
+
+
+class UploadPhotoSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField()
+
+    class Meta:
+        model = photo
+        fields = ["image"]
