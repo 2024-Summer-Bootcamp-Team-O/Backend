@@ -1,7 +1,7 @@
 -- database 초기 데이터파일
 -- user 테이블에 데이터 추가
 INSERT INTO user_user (id, name, email, password, created_at, updated_at, deleted_at)
-VALUES (1, '김철수', "string@example.com", "1234", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
+VALUES (1, '김철수', "string@example.com", "pbkdf2_sha256$600000$sG1BWcepkHT1xrKxNAxXNW$t6qWdAtsdNLMVQLPGF1+RHljecyW6MJVdnb12iNl0Sc=", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
 -- episode_time 테이블에 데이터 추가
 INSERT INTO chat_episode_flow (flow, id, created_at, updated_at, deleted_at)
 VALUES ('출근', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);

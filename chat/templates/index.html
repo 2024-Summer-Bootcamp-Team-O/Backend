@@ -5,6 +5,11 @@
 </head>
 <body>
     <h2>Chat with GPT</h2>
+    <form id="chat-form" method="post" action="/users/login">
+        <input id="email" name="email" type="text" placeholder="user id">
+        <input id="password" name="password" type="password" placeholder="password">
+        <input type="submit" value="Login">
+    </form>
     <div id="chat-log"></div>
     <input id="chat-message" type="text">
     <button id="chat-message-submit">전송</button>
@@ -12,6 +17,11 @@
     <button id="chat-feedback-submit">피드백</button>
     <button id="chat-next-submit">다음 에피소드</button>
     <button id="chat-result-submit">결과</button>
+
+    <!-- 파일 업로드 -->
+    <input id="file-upload" type="file">
+    <button id="file-upload-submit">파일 업로드</button>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const socket = new WebSocket("ws://" + window.location.host + "/ws/gpt/");
@@ -103,6 +113,7 @@
             const chatStartSubmit = document.getElementById("chat-start-submit");
             const chatNextSubmit = document.getElementById("chat-next-submit");
             const chatFeedbackSubmit = document.getElementById("chat-feedback-submit");
+            const fileUploadSubmit = document.getElementById("file-upload-submit");
 
             chatMessageSubmit.onclick = function(e) {
                 const input = document.getElementById("chat-message").value;
@@ -157,7 +168,7 @@
 
             chatResultSubmit.onclick = function(e) {
                 // Send the message to the API
-                fetch("/gpts/results", {
+                fetch("/apps/results", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -177,6 +188,32 @@
                     messageElement.style.color = "black";
                     chatLog.appendChild(messageElement);  // 채팅 로그에 메시지 추가
                 })
+            };
+
+            fileUploadSubmit.onclick = function(e) {
+                const fileInput = document.getElementById("file-upload");
+                const file = fileInput.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append("image", file);
+
+                    fetch("/apps/upload", {
+                        method: "POST",
+                        body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);  // 성공적으로 데이터를 받아왔을 때 처리
+                        const chatLog = document.getElementById("chat-log");
+                        const messageElement = document.createElement("div");
+                        messageElement.textContent = `FILE UPLOADED: ${data.url}`;
+                        messageElement.style.color = "black";
+                        chatLog.appendChild(messageElement);  // 채팅 로그에 메시지 추가
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
             };
         });
     </script>

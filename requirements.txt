@@ -16,3 +16,6 @@ redis==5.0.0b2
 requests==2.26.0
 langChain==0.1.0
 elevenlabs==1.0.5
+pillow==9.0.1
+django-storages==1.14
+boto3==1.34.1

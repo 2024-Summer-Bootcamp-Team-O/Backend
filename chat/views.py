@@ -1,5 +1,10 @@
+import uuid
+
 import requests
 import redis
+import boto3
+
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -8,9 +13,10 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from django.db.models.functions import Random
-from .models import episode, chat_episode, chat_room
-from .serializers import ChatRoomSerializer
 
+from backend import settings
+from .models import episode, chat_episode, chat_room, photo
+from .serializers import ChatRoomSerializer, UploadPhotoSerializer
 
 r = redis.Redis(host="redis", port=6379, db=0)
 
@@ -92,14 +98,6 @@ class GetFeedbackView(APIView):
             )
 
 
-def get_gpt_result(request):
-    url = request.build_absolute_uri(reverse("gpt:gpt-result"))
-    headers = {
-        "Content-Type": "application/json",
-    }
-    return requests.get(url, headers=headers)
-
-
 class ResultChatView(APIView):
     @swagger_auto_schema(operation_id="대화 종료 시 피드백을 출력하고 저장하는 API")
     def get(self, request):
@@ -115,10 +113,8 @@ class ResultChatView(APIView):
 
         # GPT 결과 요청
         result_response = get_gpt_result(request)
-        if result_response.status_code != status.HTTP_200_OK:
-            return JsonResponse(
-                result_response.json(), status=result_response.status_code
-            )
+        photo_instance = photo.objects.get(chat_room_id=room_id)
+        photo_url = photo_instance.image_url
 
         result_data = result_response.json()
 
@@ -126,11 +122,63 @@ class ResultChatView(APIView):
         chat_room_instance = chat_room.objects.get(id=room_id)
         chat_room_instance.result = result_data.get("result", "")
         chat_room_instance.save()
-
-        # Redis 지우기
         r.flushall()
+        return JsonResponse(
+            {
+                "result": result_data.get("result", ""),
+                "image_url": photo_url,
+            },
+            status=status.HTTP_200_OK,
+        )
 
-        return JsonResponse({"result": result_data.get("result", "")}, status=status.HTTP_200_OK)
+
+class PhotoUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    @swagger_auto_schema(
+        operation_id="사진을 업로드하는 API",
+        request_body=UploadPhotoSerializer,
+    )
+    def post(self, request):
+        serializer = UploadPhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            image = serializer.validated_data["image"]
+            file_url = upload_to_s3(image)
+            photo_instance = photo.objects.create(
+                image_url=file_url,
+                chat_room_id=r.get("room_id").decode("utf-8"),
+            )
+            photo_instance.save()
+            return JsonResponse(
+                {"message": "사진이 업로드 되었습니다.", "url": file_url},
+                status=status.HTTP_200_OK,
+            )
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def upload_to_s3(file):
+    # setting 파일에서 가져옴
+    custom_domain = settings.AWS_S3_CUSTOM_DOMAIN
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION,
+    )
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    file_id = r.get("room_id").decode("utf-8")
+    file_path = f"image/{file_id}"
+    s3_client.upload_fileobj(
+        file,
+        bucket_name,
+        file_path,
+        ExtraArgs={
+            "CacheControl": settings.AWS_S3_OBJECT_PARAMETERS["CacheControl"],
+            "ContentType": file.content_type,
+        },
+    )
+    file_url = f"https://{custom_domain}/{file_path}"
+    return file_url
 
 
 def get_gpt_result(request):
@@ -139,14 +187,6 @@ def get_gpt_result(request):
         "Content-Type": "application/json",
     }
     return requests.get(url, headers=headers)
-
-    response = get_gpt_feedback(request)
-
-    if response.status_code == status.HTTP_202_ACCEPTED:
-        return Response(
-                "피드백이 생성되었습니다.",
-                status=status.HTTP_201_CREATED,
-        )
 
 
 def get_next_episode_time_id(count):
