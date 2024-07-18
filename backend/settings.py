@@ -58,20 +58,24 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "http://0.0.0.0:8000",
     "http://localhost:5173",
+    "http://localhost"
 ]
-CORS_ALLOW_CREDENTIALS = True
-
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "http://0.0.0.0:8000",
     "http://localhost:5173",
 ]
+
+ALLOWED_HOSTS = ["backend", "localhost", "0.0.0.0"]
 
 ROOT_URLCONF = "backend.urls"
 
@@ -194,7 +198,8 @@ CELERY_RESULT_SERIALIZER = "json"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = '/static/'
+STATIC_ROOT = '/app/staticfiles'  # collectstatic 명령으로 모을 경로
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

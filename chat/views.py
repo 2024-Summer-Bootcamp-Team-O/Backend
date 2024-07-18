@@ -182,7 +182,7 @@ def upload_to_s3(file):
 
 
 def get_gpt_result(request):
-    url = request.build_absolute_uri(reverse("gpt:gpt-result"))
+    url = f"http://0.0.0.0:8000/gpts/results"
     headers = {
         "Content-Type": "application/json",
     }
@@ -194,7 +194,8 @@ def get_next_episode_time_id(count):
 
 
 def get_gpt_message(request, character_id, episode_id):
-    url = request.build_absolute_uri(reverse("gpt:gpt-message"))
+    url = f"http://0.0.0.0:8000/gpts/messages"
+
     payload = {"character_id": character_id, "episode_id": episode_id}
     headers = {
         "Content-Type": "application/json",
@@ -203,7 +204,7 @@ def get_gpt_message(request, character_id, episode_id):
 
 
 def get_gpt_answer(request, choice_content):
-    url = request.build_absolute_uri(reverse("gpt:gpt-answer"))
+    url = f"http://0.0.0.0:8000/gpts/answers"
     payload = {"choice_content": choice_content}
     headers = {
         "Content-Type": "application/json",
@@ -212,7 +213,7 @@ def get_gpt_answer(request, choice_content):
 
 
 def get_gpt_feedback(request):
-    url = request.build_absolute_uri(reverse("gpt:gpt-feedback"))
+    url = f"http://0.0.0.0:8000/gpts/feedbacks"
     headers = {
         "Content-Type": "application/json",
     }
