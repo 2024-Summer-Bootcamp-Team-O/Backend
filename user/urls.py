@@ -13,5 +13,5 @@ urlpatterns = [
     # profile은 jwt 예시를 보여줄 코드입니다.
     path('profile', views.ProfileView.as_view(), name='profile'),
     path('results', views.UserResultView.as_view(), name='result'),
-    path('results/<int:room_id>', views.DeleteUserResultView.as_view(), name='delete-result'),
+    path('results/<int:room_id>', views.UserDetailResultView.as_view(), name='result-detail'),
 ]
