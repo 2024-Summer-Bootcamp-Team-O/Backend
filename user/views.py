@@ -175,7 +175,8 @@ class UserResultView(APIView):
             )
 
 
-class DeleteUserResultView(APIView):
+class UserDetailResultView(APIView):
+    # 결과 삭제
     @swagger_auto_schema(
         operation_id="결과를 삭제하는 API", responses={200: "삭제 성공"}
     )
@@ -191,3 +192,43 @@ class DeleteUserResultView(APIView):
                 {"status": "404", "message": "Chat room not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+    # 결과지 상세 조회
+    @swagger_auto_schema(
+        operation_id="사용자의 결과를 상세 조회하는 API",
+        responses={
+            200: openapi.Response(
+                description="상세 조회 성공",
+                examples={
+                    "application/json": {
+                        "status": "200",
+                        "message": "결과 조회 성공",
+                        "room_id": 1,
+                        "name": "string",
+                        "result": "string"
+                    }
+                }
+            )
+        }
+    )
+    def get(self, request, room_id):
+        try:
+            chat_room_instance = chat_room.objects.get(id=room_id)
+            result = chat_room_instance.result
+            # TODO: 추후 user_name 변경 필요
+            user_name = "홍길동"
+
+            response_data = {
+                "status": "200",
+                "message": "결과 조회 성공",
+                "room_id": chat_room_instance.id,
+                "name": user_name,
+                "result": result
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        except chat_room.DoesNotExist:
+            return Response({"status": "404", "message": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
