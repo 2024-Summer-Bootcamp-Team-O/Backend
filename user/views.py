@@ -111,44 +111,14 @@ class LogoutView(APIView):
         )
 
 
-# 해당 API는 JWT 예시를 보여주기 위한 코드입니다.
-# 사용자 인증이 필요한 경우에 해당 코드를 참고하여 진행하시면 됩니다.
-class ProfileView(APIView):
-
-    @swagger_auto_schema(
-        operation_id="프로필 조회를 위한 API",
-        manual_parameters=[
-            openapi.Parameter(
-                name="Authorization",
-                in_=openapi.IN_HEADER,
-                type=openapi.TYPE_STRING,
-                description="Bearer 토큰 (예: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)",
-                required=True,
-            ),
-        ],
-    )
-    def get(self, request):
-        return Response(
-            {
-                "email": request.user.email,
-                "name": request.user.name,
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    def get_permissions(self):
-        if self.request.method == "GET":
-            self.authentication_classes = [JWTAuthentication]
-            self.permission_classes = [IsAuthenticated]
-        return super().get_permissions()
-
-
 # 결과페이지 조회
 class UserResultView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(operation_id="사용자의 대화 결과를 조회하는 API")
     def get(self, request):
-        # TODO: 추후 user_id 변경 필요
-        user_id = 1
+        user_id = request.user.id
         chat_room_instances = chat_room.objects.filter(user_id=user_id)
         if chat_room_instances.exists():
             response_data = {
@@ -176,7 +146,9 @@ class UserResultView(APIView):
 
 
 class UserDetailResultView(APIView):
-    # 결과 삭제
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_id="결과를 삭제하는 API", responses={200: "삭제 성공"}
     )
@@ -215,8 +187,7 @@ class UserDetailResultView(APIView):
         try:
             chat_room_instance = chat_room.objects.get(id=room_id)
             result = chat_room_instance.result
-            # TODO: 추후 user_name 변경 필요
-            user_name = "홍길동"
+            user_name = request.user.name
 
             response_data = {
                 "status": "200",
