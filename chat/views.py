@@ -6,7 +6,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
-from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.views import APIView
@@ -18,12 +17,6 @@ from .models import episode, chat_episode, chat_room, photo
 from .serializers import ChatRoomSerializer, UploadPhotoSerializer
 
 r = redis.Redis(host="redis", port=6379, db=0)
-
-
-# 웹소켓 테스트용 api
-class IndexView(APIView):
-    def get(self, request):
-        return render(request, "index.html")
 
 
 class CreateChatRoomView(APIView):

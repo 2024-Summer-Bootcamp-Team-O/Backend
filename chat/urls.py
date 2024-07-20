@@ -9,5 +9,4 @@ urlpatterns = [
     path("feedbacks", views.GetFeedbackView.as_view(), name="gpts-feedbacks"),
     path("results", views.ResultChatView.as_view(), name="result-chat"),
     path("upload", views.PhotoUploadView.as_view(), name="get-photos"),
-    path("", views.IndexView.as_view(), name="index"),
 ]
