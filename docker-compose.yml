@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: backend
-    expose:
+    ports:
       - "8000:8000"
     volumes:
       - .:/app
@@ -71,7 +71,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-    command: sh -c "celery -A backend worker -l info"
+    command: sh -c "celery -A rumz worker -l info"
 
     networks:
       - MZ
