@@ -21,7 +21,7 @@ SECRET_KEY = "django-insecure--@@6+#ypqy@f3-x8jzbm*2b!c#0%d7opxmymzcs81umda%#t0b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "rumz.site"]
 
 
 # Application definition
@@ -49,7 +49,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "django_prometheus.middleware.PrometheusAfterMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -58,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 
@@ -76,8 +76,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://0.0.0.0:8000",
     "http://localhost:5173",
 ]
-
-ALLOWED_HOSTS = ["rumz", "localhost", "0.0.0.0"]
 
 ROOT_URLCONF = "rumz.urls"
 
