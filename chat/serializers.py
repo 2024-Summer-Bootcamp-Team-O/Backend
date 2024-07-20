@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import chat_room, character, photo
+from .models import chat_room, photo
 
 
 class ChatRoomSerializer(serializers.ModelSerializer):
