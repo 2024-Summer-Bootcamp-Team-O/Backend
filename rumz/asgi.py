@@ -1,5 +1,5 @@
 """
-ASGI config for backend project.
+ASGI config for rumz project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -12,7 +12,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 import gpt.routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rumz.settings")
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),

@@ -5,11 +5,7 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --upgrade pip
-RUN pip install django-redis
 RUN pip install -r requirements.txt
-RUN python manage.py collectstatic --noinput
-
-RUN pip install daphne channels channels-redis aiohttp
 
 EXPOSE 8000
 

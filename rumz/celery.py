@@ -3,10 +3,10 @@ import os
 from celery import Celery
 
 # 설정 파일의 경로를 환경 변수로 설정
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rumz.settings")
 
 # Celery 앱 생성
-app = Celery("backend")
+app = Celery("rumz")
 
 # Celery 설정 로드
 app.config_from_object("django.conf:settings", namespace="CELERY")
