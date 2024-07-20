@@ -9,8 +9,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .tasks import get_gpt_result, get_gpt_message, get_gpt_feedback
 from gpt.serializers import GetGPTMessageSerializer
 
-talk_count = 1
-
 
 class GetGPTMessageView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -21,20 +19,20 @@ class GetGPTMessageView(APIView):
         operation_id="GPT의 대사를 가져오는 API",
     )
     def post(self, request):
-        global talk_count
         serializer = GetGPTMessageSerializer(data=request.data)
         if serializer.is_valid():
             character_id = serializer.validated_data.get("character_id")
             episode_id = serializer.validated_data.get("episode_id")
-            redis_key = "count"
 
             r = redis.Redis(host="redis", port=6379, db=0)
             if r.exists("episode_id"):
                 r.delete("episode_id")
             r.set("episode_id", episode_id)
-            r.set(redis_key, talk_count)
+            if r.exists("count"):
+                r.incr("count")
+            else:
+                r.set("count", 1)
             r.set("character_id", character_id)
-            talk_count += 1
             result = get_gpt_message.delay(character_id, episode_id)
             return JsonResponse(
                 {"task_id": result.task_id}, status=status.HTTP_202_ACCEPTED
