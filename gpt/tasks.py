@@ -120,7 +120,7 @@ def get_gpt_answer(user_message):
     full_response = ""
     for response in stream:
         if "delta" in response.choices[0] and "content" in response.choices[0]["delta"]:
-            result = response.choices[0]["delta"]["content"].strip()
+            result = response.choices[0]["delta"]["content"]
             full_response += result
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(

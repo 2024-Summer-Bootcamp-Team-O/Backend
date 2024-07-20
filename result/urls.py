@@ -1,3 +1,0 @@
-appname = "result"
-
-urlpatterns = []
