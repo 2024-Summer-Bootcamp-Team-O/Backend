@@ -44,9 +44,12 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_celery_results",
     "storages",
+    "django_prometheus",
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -74,9 +77,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-ALLOWED_HOSTS = ["backend", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = ["rumz", "localhost", "0.0.0.0"]
 
-ROOT_URLCONF = "backend.urls"
+ROOT_URLCONF = "rumz.urls"
 
 TEMPLATES = [
     {
@@ -94,7 +97,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
+WSGI_APPLICATION = "rumz.wsgi.application"
 
 
 # Database
@@ -102,7 +105,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "django_prometheus.db.backends.mysql",
         "NAME": os.getenv("MYSQL_DATABASE"),
         "USER": os.getenv("MYSQL_USER"),
         "PASSWORD": os.getenv("MYSQL_PASSWORD"),
@@ -111,7 +114,7 @@ DATABASES = {
     }
 }
 
-ASGI_APPLICATION = "backend.asgi.application"
+ASGI_APPLICATION = "rumz.asgi.application"
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -187,7 +190,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-ASGI_APPLICATION = "backend.asgi.application"
+ASGI_APPLICATION = "rumz.asgi.application"
 
 CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672/"
 CELERY_ACCEPT_CONTENT = ["application/json"]

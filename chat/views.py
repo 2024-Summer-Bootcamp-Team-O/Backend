@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from django.db.models.functions import Random
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from backend import settings
+from rumz import settings
 from .models import episode, chat_episode, chat_room, photo
 from .serializers import ChatRoomSerializer, UploadPhotoSerializer
 

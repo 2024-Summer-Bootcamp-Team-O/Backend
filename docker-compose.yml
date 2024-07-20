@@ -1,4 +1,3 @@
-# docker-compose up --build 로 실행
 services:
   database:
     image: mysql:8.0
