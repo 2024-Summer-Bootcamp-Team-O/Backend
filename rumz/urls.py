@@ -7,13 +7,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="걔, 킹받네?",
+        title="Re:forming U, MZ?",
         default_version="v2",
-        description="걔, 킹받네? 프로젝트 API 문서",
+        description="Re:forming U, MZ? 프로젝트 API 문서",
         terms_of_service="https://www.google.com/policies/terms/",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
+    urlconf="rumz.urls",
+    url="https://rumz.site"
 )
 
 urlpatterns = [
