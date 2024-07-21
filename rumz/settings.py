@@ -60,21 +60,32 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "DEFAULT_API_URL": "https://rumz.site",  # Use HTTPS URL here
+}
+
 
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_WHITELIST = [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
     "http://0.0.0.0:8000",
     "http://localhost:5173",
-    "http://localhost"
+    "http://localhost",
+    "https://rumz.site",
+    "http://rumz.site",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
     "http://0.0.0.0:8000",
     "http://localhost:5173",
+    "https://rumz.site"
 ]
 
 ROOT_URLCONF = "rumz.urls"
