@@ -169,7 +169,7 @@ class PhotoUploadView(APIView):
 
 def upload_to_s3(file):
     # setting 파일에서 가져옴
-    custom_domain = settings.AWS_S3_CUSTOM_DOMAIN
+    custom_domain = settings.AWS_CLOUDFRONT_DOMAIN
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,

@@ -2,7 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from chat.models import chat_room
+from chat.models import chat_room, photo
 from user.models import user
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -129,20 +129,20 @@ class UserResultView(APIView):
                         "room_id": room.id,
                         "character_id": room.character_id,
                         "name": room.user.name,
+                        "image_url": photo.objects.get(chat_room_id=room.id).image_url
                     }
                     for room in chat_room_instances
                 ],
             }
             return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {
-                    "status": "200",
-                    "message": "No chat rooms found for the user",
-                    "data": [],
-                },
-                status=status.HTTP_200_OK,
-            )
+        return Response(
+            {
+                "status": "200",
+                "message": "No chat rooms found for the user",
+                "data": [],
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserDetailResultView(APIView):
@@ -177,7 +177,8 @@ class UserDetailResultView(APIView):
                         "message": "결과 조회 성공",
                         "room_id": 1,
                         "name": "string",
-                        "result": "string"
+                        "result": "string",
+                        "image_url": "url"
                     }
                 }
             )
@@ -194,7 +195,8 @@ class UserDetailResultView(APIView):
                 "message": "결과 조회 성공",
                 "room_id": chat_room_instance.id,
                 "name": user_name,
-                "result": result
+                "result": result,
+                "image_url": photo.objects.get(chat_room_id=room_id).image_url
             }
             return Response(response_data, status=status.HTTP_200_OK)
         except chat_room.DoesNotExist:
