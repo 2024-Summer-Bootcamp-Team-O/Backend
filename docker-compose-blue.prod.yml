@@ -6,7 +6,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx-blue.conf:/etc/nginx/nginx-blue.conf
+      - ./nginx-blue.conf:/etc/nginx/nginx.conf
       - ./staticfiles:/app/staticfiles
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
