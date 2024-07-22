@@ -1,12 +1,12 @@
 services:
   nginx:
     image: nginx:latest
-    container_name: nginx
+    container_name: nginx-green
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx-green.conf:/etc/nginx/nginx.conf
       - ./staticfiles:/app/staticfiles
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile
     container_name: backend_green
     expose:
-      - "8000"
+      - "8001"
     volumes:
       - .:/app
     command: >
@@ -40,7 +40,7 @@ services:
             python manage.py makemigrations &&
             python manage.py migrate &&
             python manage.py collectstatic --no-input &&
-            gunicorn rumz.wsgi:application --bind 0.0.0.0:8000 --timeout 120 --workers 4 --max-requests 1000"
+            gunicorn rumz.wsgi:application --bind 0.0.0.0:8001 --timeout 120 --workers 4 --max-requests 1000"
     tty: true
     networks:
       - MZ
