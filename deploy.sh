@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Variables
 BLUE_COMPOSE_FILE=docker-compose-blue.prod.yml
 GREEN_COMPOSE_FILE=docker-compose-green.prod.yml
@@ -38,11 +40,26 @@ echo "Building and deploying $NEW_SERVICE..."
 docker-compose -f $NEW_COMPOSE_FILE build $NEW_SERVICE
 docker-compose -f $NEW_COMPOSE_FILE up -d $NEW_SERVICE
 
-# Copy new Nginx configuration to container and reload
-echo "Reloading Nginx configuration..."
-docker-compose -f $NEW_COMPOSE_FILE down nginx
+# Verify if new service is up and running
+echo "Verifying $NEW_SERVICE..."
+until docker-compose -f $NEW_COMPOSE_FILE exec $NEW_SERVICE curl -s http://localhost:$NEW_PORT >/dev/null; do
+    echo "$NEW_SERVICE is not yet running. Retrying..."
+    sleep 5
+done
+
+# Start new Nginx with the new config
+echo "Starting new Nginx with $NEW_NGINX_CONFIG..."
 docker-compose -f $NEW_COMPOSE_FILE up -d nginx
 
+# Verify if new Nginx is correctly running
+echo "Verifying new Nginx..."
+until docker-compose -f $NEW_COMPOSE_FILE exec nginx curl -s https://rumz.site >/dev/null; do
+    echo "New Nginx is not yet responding. Retrying..."
+    sleep 5
+done
+
+# Reload Nginx with the new configuration
+echo "Reloading Nginx configuration..."
 docker-compose -f $NEW_COMPOSE_FILE exec nginx nginx -s reload
 
 # Stop old version
