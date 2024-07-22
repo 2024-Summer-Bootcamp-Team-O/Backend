@@ -55,5 +55,4 @@ jobs:
           port: 22
           script: |
             cd /home/ec2-user/Backend
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d --build
+            ./deploy.sh
