@@ -26,7 +26,7 @@ services:
       - nginx
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
-  backend:
+  backend_green:
     build:
       context: .
       dockerfile: Dockerfile
