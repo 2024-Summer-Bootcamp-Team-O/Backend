@@ -2,10 +2,6 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.urls import reverse
 from unittest.mock import patch, MagicMock
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from user.models import user
-from user.views import LogoutView
 
 
 # 회원가입 테스트
