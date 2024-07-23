@@ -39,6 +39,12 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/rumz:cache,mode=max
 
       - name: Run unit tests
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
            docker-compose -f docker-compose-test.yml up --build --abort-on-container-exit
 
