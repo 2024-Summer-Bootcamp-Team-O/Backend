@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "chat.apps.ChatConfig",
     "user.apps.UserConfig",
+    "share.apps.ShareConfig",
     "gpt.apps.GptConfig",
     "rest_framework",
     "drf_yasg",

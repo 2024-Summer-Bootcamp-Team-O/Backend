@@ -1,6 +1,9 @@
+import uuid
+
 import requests
 import redis
 import boto3
+from botocore.exceptions import ClientError
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
@@ -167,6 +170,21 @@ class PhotoUploadView(APIView):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+def generate_unique_file_id():
+    return str(uuid.uuid4())
+
+
+def check_file_exists(s3_client, bucket_name, file_path):
+    try:
+        s3_client.head_object(Bucket=bucket_name, Key=file_path)
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise
+
+
 def upload_to_s3(file):
     # setting 파일에서 가져옴
     custom_domain = settings.AWS_CLOUDFRONT_DOMAIN
@@ -177,8 +195,14 @@ def upload_to_s3(file):
         region_name=settings.AWS_REGION,
     )
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME
-    file_id = r.get("room_id").decode("utf-8")
+
+    file_id = generate_unique_file_id()
     file_path = f"image/{file_id}"
+
+    while check_file_exists(s3_client, bucket_name, file_path):
+        file_id = generate_unique_file_id()
+        file_path = f"image/{file_id}"
+
     s3_client.upload_fileobj(
         file,
         bucket_name,
