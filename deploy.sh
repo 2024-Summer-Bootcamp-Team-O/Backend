@@ -47,21 +47,6 @@ until docker-compose -f $NEW_COMPOSE_FILE exec $NEW_SERVICE curl -s http://local
     sleep 5
 done
 
-# Start new Nginx with the new config
-echo "Starting new Nginx with $NEW_NGINX_CONFIG..."
-docker-compose -f $NEW_COMPOSE_FILE up -d nginx
-
-# Verify if new Nginx is correctly running
-echo "Verifying new Nginx..."
-until docker-compose -f $NEW_COMPOSE_FILE exec nginx curl -s https://rumz.site >/dev/null; do
-    echo "New Nginx is not yet responding. Retrying..."
-    sleep 5
-done
-
-# Reload Nginx with the new configuration
-echo "Reloading Nginx configuration..."
-docker-compose -f $NEW_COMPOSE_FILE exec nginx nginx -s reload
-
 # Stop old version
 echo "Stopping old version $OLD_SERVICE..."
 docker-compose -f $OLD_COMPOSE_FILE stop $OLD_SERVICE
