@@ -138,7 +138,8 @@ class ResultChatView(APIView):
             {
                 "result": result_data.get("result", ""),
                 "image_url": photo_url,
-                "name": request.user.name
+                "name": request.user.name,
+                "room_id": room_id,
             },
             status=status.HTTP_200_OK,
         )

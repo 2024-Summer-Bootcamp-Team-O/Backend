@@ -3,7 +3,9 @@
 # Variables
 BLUE_COMPOSE_FILE=docker-compose-blue.prod.yml
 GREEN_COMPOSE_FILE=docker-compose-green.prod.yml
+NGINX_COMPOSE_FILE=docker-compose-nginx.yml
 VERSION_FILE=current_version.txt
+NGINX_CONF_FILE=nginx.conf
 
 if [ -f $VERSION_FILE ]; then
     CURRENT_VERSION=$(cat $VERSION_FILE)
@@ -19,8 +21,6 @@ if [ "$CURRENT_VERSION" == "blue" ]; then
     OLD_COMPOSE_FILE=$BLUE_COMPOSE_FILE
     NEW_SERVICE="backend_green"
     OLD_SERVICE="backend_blue"
-    NEW_NGINX_CONFIG="nginx-green.conf"
-    OLD_NGINX_CONFIG="nginx-blue.conf"
     NEW_PORT=8001
     OLD_PORT=8000
 else
@@ -29,8 +29,6 @@ else
     OLD_COMPOSE_FILE=$GREEN_COMPOSE_FILE
     NEW_SERVICE="backend_blue"
     OLD_SERVICE="backend_green"
-    NEW_NGINX_CONFIG="nginx-blue.conf"
-    OLD_NGINX_CONFIG="nginx-green.conf"
     NEW_PORT=8000
     OLD_PORT=8001
 fi
@@ -47,24 +45,31 @@ until docker-compose -f $NEW_COMPOSE_FILE exec $NEW_SERVICE curl -s http://local
     sleep 5
 done
 
-# Start new Nginx with the new config
-echo "Starting new Nginx with $NEW_NGINX_CONFIG..."
-docker-compose -f $NEW_COMPOSE_FILE up -d nginx
+# Update Nginx configuration
+echo "Updating Nginx configuration..."
+if [ "$NEW_VERSION" == "green" ]; then
+    sed -i 's/server backend_blue:8000;/server backend_green:8001;/g' $NGINX_CONF_FILE
+else
+    sed -i 's/server backend_green:8001;/server backend_blue:8000;/g' $NGINX_CONF_FILE
+fi
+
+# Restart Nginx container to apply new configuration
+echo "Restarting Nginx container..."
+docker-compose -f $NGINX_COMPOSE_FILE restart nginx
 
 # Verify if new Nginx is correctly running
 echo "Verifying new Nginx..."
-until docker-compose -f $NEW_COMPOSE_FILE exec nginx curl -s https://rumz.site >/dev/null; do
+until docker-compose -f $NGINX_COMPOSE_FILE exec nginx curl -s https://rumz.site >/dev/null; do
     echo "New Nginx is not yet responding. Retrying..."
     sleep 5
 done
 
-# Reload Nginx with the new configuration
-echo "Reloading Nginx configuration..."
-docker-compose -f $NEW_COMPOSE_FILE exec nginx nginx -s reload
-
 # Stop old version
 echo "Stopping old version $OLD_SERVICE..."
 docker-compose -f $OLD_COMPOSE_FILE stop $OLD_SERVICE
+
+echo "Removing old data..."
+docker system prune -a --volumes -f
 
 # Update version file
 echo "Updating version file..."
