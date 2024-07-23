@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Pull latest code
+echo "Pulling latest code from develop branch..."
+git pull origin develop
+
 # Variables
 BLUE_COMPOSE_FILE=docker-compose-blue.prod.yml
 GREEN_COMPOSE_FILE=docker-compose-green.prod.yml
