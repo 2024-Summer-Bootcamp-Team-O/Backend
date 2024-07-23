@@ -80,6 +80,23 @@ services:
       - rabbitmq
       - backend
 
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test
+    depends_on:
+      - database
+    command: >
+      sh -c "sleep 10 &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py test"
+    volumes:
+      - .:/app
+    networks:
+      - MZ
+
 networks:
   MZ:
     driver: bridge
