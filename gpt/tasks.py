@@ -7,6 +7,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from dotenv import load_dotenv
 from langchain.memory import ConversationBufferMemory
+from rest_framework_simplejwt.tokens import AccessToken
 
 from chat.models import character, episode, voice
 
@@ -25,14 +26,13 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 openai.api_key = os.environ.get("GPT_API_KEY")
-feedback_count = 1
 r = redis.Redis(host="redis", port=6379, db=0)
 
 
 # 대사 제공과 동시에 선택지 제공
 @shared_task
-def get_gpt_message(charcater_id, episode_id):
-    load_memory()
+def get_gpt_message(charcater_id, episode_id, user_email):
+    load_memory(user_email)
     memory.chat_memory.messages = []
     episode_content = episode.objects.get(id=episode_id).content
     characters = character.objects.get(id=charcater_id)
@@ -56,11 +56,11 @@ def get_gpt_message(charcater_id, episode_id):
         ],
         stream=True,
     )
-    if r.exists("episode_id"):
-        r.delete("episode_id")
-    r.set("episode_id", episode_id)
-    if r.exists("talk_content"):
-        r.delete("talk_content")
+    if r.exists(f"episode_id:{user_email}"):
+        r.delete(f"episode_id:{user_email}")
+    r.set(f"episode_id:{user_email}", episode_id)
+    if r.exists(f"talk_content:{user_email}"):
+        r.delete(f"talk_content:{user_email}")
     full_response = ""
     for response in stream:
         if "delta" in response.choices[0] and "content" in response.choices[0]["delta"]:
@@ -76,11 +76,11 @@ def get_gpt_message(charcater_id, episode_id):
                 },
             )
     memory.chat_memory.messages.append({"role": "assistant", "content": full_response})
-    r.set("talk_content", full_response.encode("utf-8"))
+    r.set(f"talk_content:{user_email}", full_response.encode("utf-8"))
     conversation_history = "\n".join(
         [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
     )
-    r.set("conversation_history", conversation_history.encode("utf-8"))
+    r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
 
     text_to_speech_file(full_response, charcater_id)
 
@@ -89,10 +89,12 @@ def get_gpt_message(charcater_id, episode_id):
 
 # 답변과 동시에 피드백 제공
 @shared_task
-def get_gpt_answer(user_message):
-    load_memory()
-    episode_id = r.get("episode_id").decode("utf-8")
-    character_id = r.get("character_id").decode("utf-8")
+def get_gpt_answer(user_message, access_token):
+    token = AccessToken(access_token)
+    user_email = token["user_email"]
+    load_memory(user_email)
+    episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
+    character_id = int(r.get(f"character_id:{user_email}"))
     character_script = character.objects.get(id=character_id).script
     episode_content = episode.objects.get(id=episode_id).content
     memory.chat_memory.messages.append({"role": "user", "content": user_message})
@@ -134,7 +136,7 @@ def get_gpt_answer(user_message):
     conversation_history = "\n".join(
         [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
     )
-    r.set("conversation_history", conversation_history.encode("utf-8"))
+    r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
 
     text_to_speech_file(full_response, character_id)
 
@@ -142,9 +144,8 @@ def get_gpt_answer(user_message):
 
 
 @shared_task
-def get_gpt_feedback():
-    global feedback_count
-    episode_id = r.get("episode_id").decode("utf-8")
+def get_gpt_feedback(user_email):
+    episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
     episode_content = episode.objects.get(id=episode_id).content
     character_id = 6  # 김수미로 고정
     character_script = character.objects.get(id=character_id).script
@@ -171,10 +172,17 @@ def get_gpt_feedback():
     )
 
     result = response.choices[0].message["content"].strip()
-    redis_key = f"feedback{feedback_count}"
-    r.set(redis_key, result.encode("utf-8"))
+    feedback_pattern = f"feedback:{user_email}-*"
+    feedback_keys = r.keys(feedback_pattern)
 
-    feedback_count += 1
+    if feedback_keys:
+        max_feedback_count = max(int(key.decode().split('-')[-1]) for key in feedback_keys)
+        feedback_count = max_feedback_count + 1
+    else:
+        feedback_count = 1
+
+    redis_key = f"feedback:{user_email}-{feedback_count}"
+    r.set(redis_key, result.encode("utf-8"))
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -191,8 +199,8 @@ def get_gpt_feedback():
 
 
 @shared_task
-def get_gpt_result():
-    feedback_keys = r.keys("feedback*")
+def get_gpt_result(user_email):
+    feedback_keys = r.keys(f"feedback:{user_email}-*")
     feedback_values = [r.get(key).decode("utf-8") for key in feedback_keys]
     feedback_values_str = ", ".join(feedback_values)
     response = openai.ChatCompletion.create(
@@ -220,8 +228,8 @@ def get_gpt_result():
     return result
 
 
-def load_memory():
-    history = r.get("conversation_history")
+def load_memory(user_email):
+    history = r.get(f"conversation_history:{user_email}")
     if history:
         # Redis에서 가져온 문자열을 줄 단위로 분리하고, 각 줄을 메시지 형식으로 변환
         messages = history.decode("utf-8").splitlines()

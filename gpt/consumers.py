@@ -24,7 +24,7 @@ class ChatConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         input_data = json.loads(text_data)
-        get_gpt_answer.delay(input_data["message"])
+        get_gpt_answer.delay(input_data["message"], input_data["access"])
 
     def gpt_talk_message(self, event):
         message = event["message"]

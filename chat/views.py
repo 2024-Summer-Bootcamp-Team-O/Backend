@@ -33,16 +33,16 @@ class CreateChatRoomView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = ChatRoomSerializer(data=request.data)
         if serializer.is_valid():
-            user_id = request.user.id
+            user_email = request.user.email
             character_id = serializer.validated_data.get("character_id")
             chat_room_instance = chat_room.objects.create(
-                user_id=user_id, character_id=character_id
+                user_email=user_email, character_id=character_id
             )
             chat_room_instance.save()
-            r.set("room_id", chat_room_instance.id)
+            r.set(f"room_id:{user_email}", chat_room_instance.id)
             # 저장된 데이터에서 character_id 추출
             character_id = chat_room_instance.character_id
-            r.set("character_id", character_id)
+            r.set(f"character_id:{user_email}", character_id)
             next_episode_time_id = get_next_episode_time_id(0)
             next_episode_id = get_random_episode_id(next_episode_time_id)
             response = get_gpt_message(request, character_id, next_episode_id)
@@ -65,9 +65,10 @@ class NextEpisodeView(APIView):
         operation_id="다음 상황을 랜덤 제공하는 API",
     )
     def get(self, request):
-        character_id = r.get("character_id").decode("utf-8")
-        room_id = int(r.get("room_id"))
-        count = int(r.get("count"))
+        user_email = request.user.email
+        character_id = r.get(f"character_id:{user_email}").decode("utf-8")
+        room_id = int(r.get(f"room_id:{user_email}"))
+        count = int(r.get(f"count:{user_email}"))
         next_episode_time_id = get_next_episode_time_id(count)
         next_episode_id = get_random_episode_id(next_episode_time_id)
 
@@ -112,7 +113,8 @@ class ResultChatView(APIView):
 
     @swagger_auto_schema(operation_id="대화 종료 시 피드백을 출력하고 저장하는 API")
     def get(self, request):
-        room_id = r.get("room_id")
+        user_email = request.user.email
+        room_id = r.get(f"room_id:{user_email}")
 
         if room_id is None:
             return JsonResponse(
@@ -133,7 +135,9 @@ class ResultChatView(APIView):
         chat_room_instance = chat_room.objects.get(id=room_id)
         chat_room_instance.result = result_data.get("result", "")
         chat_room_instance.save()
-        r.flushall()
+
+        for key in r.scan_iter(f"*{user_email}*"):
+            r.delete(key)
         return JsonResponse(
             {
                 "result": result_data.get("result", ""),
@@ -156,12 +160,13 @@ class PhotoUploadView(APIView):
     )
     def post(self, request):
         serializer = UploadPhotoSerializer(data=request.data)
+        user_email = request.user.email
         if serializer.is_valid():
             image = serializer.validated_data["image"]
             file_url = upload_to_s3(image)
             photo_instance = photo.objects.create(
                 image_url=file_url,
-                chat_room_id=r.get("room_id").decode("utf-8"),
+                chat_room_id=r.get(f"room_id:{user_email}").decode("utf-8"),
             )
             photo_instance.save()
             return JsonResponse(
