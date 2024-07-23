@@ -55,4 +55,5 @@ jobs:
           port: 22
           script: |
             cd /home/ec2-user/Backend
+            git pull origin develop
             ./deploy.sh
