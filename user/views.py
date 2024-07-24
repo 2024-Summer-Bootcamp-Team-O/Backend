@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -119,8 +120,12 @@ class UserResultView(APIView):
     @swagger_auto_schema(operation_id="사용자의 대화 결과를 조회하는 API")
     def get(self, request):
         user_id = request.user.id
-        chat_room_instances = chat_room.objects.filter(user_id=user_id)
-        if chat_room_instances.exists():
+        chat_rooms = chat_room.objects.filter(Q(user_id=user_id) & ~Q(result="")).select_related('user')
+        photo_instance = photo.objects.filter(chat_room__user_id=user_id)
+
+        if chat_rooms.exists() and photo_instance.exists():
+            photo_dict = {photo.chat_room_id: photo.image_url for photo in photo_instance}
+
             response_data = {
                 "status": "200",
                 "message": "결과 조회 성공",
@@ -129,12 +134,13 @@ class UserResultView(APIView):
                         "room_id": room.id,
                         "character_id": room.character_id,
                         "name": room.user.name,
-                        "image_url": photo.objects.get(chat_room_id=room.id).image_url
+                        "image_url": photo_dict[room.id]
                     }
-                    for room in chat_room_instances
+                    for room in chat_rooms
                 ],
             }
             return Response(response_data, status=status.HTTP_200_OK)
+
         return Response(
             {
                 "status": "200",
