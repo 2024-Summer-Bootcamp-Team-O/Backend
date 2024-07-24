@@ -3,9 +3,9 @@
 # Variables
 BLUE_COMPOSE_FILE=docker-compose-blue.prod.yml
 GREEN_COMPOSE_FILE=docker-compose-green.prod.yml
-NGINX_COMPOSE_FILE=docker-compose-nginx.yml
 VERSION_FILE=current_version.txt
 NGINX_CONF_FILE=nginx.conf
+NGINX_CONF_PATH=/etc/nginx/nginx.conf
 
 if [ -f $VERSION_FILE ]; then
     CURRENT_VERSION=$(cat $VERSION_FILE)
@@ -45,24 +45,19 @@ until docker-compose -f $NEW_COMPOSE_FILE exec $NEW_SERVICE curl -s http://local
     sleep 5
 done
 
-# Update Nginx configuration
-echo "Updating Nginx configuration..."
+echo "Fetching IP address of the new service..."
 if [ "$NEW_VERSION" == "green" ]; then
-    sed -i 's/server backend_blue:8000;/server backend_green:8001;/g' $NGINX_CONF_FILE
+    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_green)
+    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_blue)
+    sudo sed -i "s/server ${OLD_SERVICE_IP}:8000;/server ${NEW_SERVICE_IP}:8001;/g" $NGINX_CONF_PATH
 else
-    sed -i 's/server backend_green:8001;/server backend_blue:8000;/g' $NGINX_CONF_FILE
+    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_blue)
+    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_green)
+    sudo sed -i "s/server ${OLD_SERVICE_IP}:8001;/server ${NEW_SERVICE_IP}:8000;/g" $NGINX_CONF_PATH
 fi
 
-# Restart Nginx container to apply new configuration
-echo "Restarting Nginx container..."
-docker-compose -f $NGINX_COMPOSE_FILE restart nginx
-
-# Verify if new Nginx is correctly running
-echo "Verifying new Nginx..."
-until docker-compose -f $NGINX_COMPOSE_FILE exec nginx curl -s https://rumz.site >/dev/null; do
-    echo "New Nginx is not yet responding. Retrying..."
-    sleep 5
-done
+echo "Reloading Nginx configuration..."
+sudo nginx -s reload
 
 # Stop old version
 echo "Stopping old version $OLD_SERVICE..."

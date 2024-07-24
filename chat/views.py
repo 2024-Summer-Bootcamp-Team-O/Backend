@@ -224,7 +224,12 @@ def upload_to_s3(file):
 
 
 def get_gpt_result(request):
-    url = f"http://0.0.0.0:8000/gpts/results"
+    old_version = get_old_version()
+    
+    if old_version == "blue":
+        url = f"http://0.0.0.0:8001/api/gpts/results"
+    else:
+        url = f"http://0.0.0.0:8000/api/gpts/results"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {get_jwt_token(request)}",
@@ -237,7 +242,12 @@ def get_next_episode_time_id(count):
 
 
 def get_gpt_message(request, character_id, episode_id):
-    url = f"http://0.0.0.0:8000/gpts/messages"
+    old_version = get_old_version()
+    
+    if old_version == "blue":
+        url = f"http://0.0.0.0:8001/api/gpts/messages"
+    else:
+        url = f"http://0.0.0.0:8000/api/gpts/messages"
     payload = {"character_id": character_id, "episode_id": episode_id}
     headers = {
         "Content-Type": "application/json",
@@ -247,7 +257,12 @@ def get_gpt_message(request, character_id, episode_id):
 
 
 def get_gpt_answer(request, choice_content):
-    url = f"http://0.0.0.0:8000/gpts/answers"
+    old_version = get_old_version()
+
+    if old_version == "blue":
+        url = f"http://0.0.0.0:8001/api/gpts/answers"
+    else:
+        url = f"http://0.0.0.0:8000/api/gpts/answers"
     payload = {"choice_content": choice_content}
     headers = {
         "Content-Type": "application/json",
@@ -257,7 +272,12 @@ def get_gpt_answer(request, choice_content):
 
 
 def get_gpt_feedback(request):
-    url = f"http://0.0.0.0:8000/gpts/feedbacks"
+    old_version = get_old_version()
+    
+    if old_version == "blue":
+        url = f"http://0.0.0.0:8001/api/gpts/feedbacks"
+    else:
+        url = f"http://0.0.0.0:8000/api/gpts/feedbacks"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {get_jwt_token(request)}",
@@ -278,3 +298,8 @@ def get_random_episode_id(episode_time_id):
 
 def get_jwt_token(request):
     return request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
+
+
+def get_old_version():
+    with open("/app/current_version.txt", "r") as file:
+        return file.read().strip()
