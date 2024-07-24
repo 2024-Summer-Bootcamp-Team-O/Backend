@@ -120,12 +120,12 @@ class UserResultView(APIView):
     @swagger_auto_schema(operation_id="사용자의 대화 결과를 조회하는 API")
     def get(self, request):
         user_id = request.user.id
-        chat_rooms = chat_room.objects.filter(Q(user_id=user_id) & ~Q(result="")).select_related('user')
-        photo_instance = photo.objects.filter(chat_room__user_id=user_id)
+        photo_chat_room_ids = photo.objects.filter(chat_room__user_id=user_id).values_list('chat_room_id', flat=True)
+        chat_rooms = chat_room.objects.filter(
+            Q(user_id=user_id) & ~Q(result="") & Q(id__in=photo_chat_room_ids)
+        ).select_related('user')
 
-        if chat_rooms.exists() and photo_instance.exists():
-            photo_dict = {photo.chat_room_id: photo.image_url for photo in photo_instance}
-
+        if chat_rooms.exists():
             response_data = {
                 "status": "200",
                 "message": "결과 조회 성공",
@@ -134,7 +134,7 @@ class UserResultView(APIView):
                         "room_id": room.id,
                         "character_id": room.character_id,
                         "name": room.user.name,
-                        "image_url": photo_dict[room.id]
+                        "image_url": photo.objects.get(chat_room_id=room.id).image_url
                     }
                     for room in chat_rooms
                 ],
