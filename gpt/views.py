@@ -50,7 +50,7 @@ class GetGPTFeedbackView(APIView):
         operation_id="GPT의 피드백을 가져오는 API",
     )
     def get(self, request):
-        user_email = request.user.id
+        user_email = request.user.email
         result = get_gpt_feedback.delay(user_email)
         return JsonResponse(
             {"task_id": result.task_id}, status=status.HTTP_202_ACCEPTED

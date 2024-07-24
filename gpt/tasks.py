@@ -16,6 +16,8 @@ from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from django.shortcuts import get_object_or_404
 
+from user.models import user
+
 memory = ConversationBufferMemory()
 load_dotenv()
 
@@ -91,7 +93,8 @@ def get_gpt_message(charcater_id, episode_id, user_email):
 @shared_task
 def get_gpt_answer(user_message, access_token):
     token = AccessToken(access_token)
-    user_email = token["user_email"]
+    user_id = token["user_id"]
+    user_email = user.objects.get(id=user_id).email
     load_memory(user_email)
     episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
     character_id = int(r.get(f"character_id:{user_email}"))
