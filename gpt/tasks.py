@@ -37,6 +37,7 @@ def get_gpt_message(charcater_id, episode_id, user_email):
     load_memory(user_email)
     memory.chat_memory.messages = []
     episode_content = episode.objects.get(id=episode_id).content
+    user_id = user.objects.get(email=user_email).id
     characters = character.objects.get(id=charcater_id)
     character_script = characters.script
     stream = openai.ChatCompletion.create(
@@ -68,10 +69,9 @@ def get_gpt_message(charcater_id, episode_id, user_email):
         if "delta" in response.choices[0] and "content" in response.choices[0]["delta"]:
             result = response.choices[0]["delta"]["content"]
             full_response += result
-
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "chat_room",
+                f"chat_{user_id}",
                 {
                     "type": "gpt_talk_message",
                     "message": result,
@@ -84,17 +84,15 @@ def get_gpt_message(charcater_id, episode_id, user_email):
     )
     r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
 
-    text_to_speech_file(full_response, charcater_id)
+    text_to_speech_file(full_response, charcater_id, user_id)
 
     return full_response
 
 
 # 답변과 동시에 피드백 제공
 @shared_task
-def get_gpt_answer(user_message, access_token):
-    token = AccessToken(access_token)
-    user_id = token["user_id"]
-    user_email = user.objects.get(id=user_id).email
+def get_gpt_answer(user_message, user_email):
+    user_id = user.objects.get(email=user_email).id
     load_memory(user_email)
     episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
     character_id = int(r.get(f"character_id:{user_email}"))
@@ -129,7 +127,7 @@ def get_gpt_answer(user_message, access_token):
             full_response += result
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "chat_room",
+                f"chat_{user_id}",
                 {
                     "type": "gpt_answer_message",
                     "message": result,
@@ -141,7 +139,7 @@ def get_gpt_answer(user_message, access_token):
     )
     r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
 
-    text_to_speech_file(full_response, character_id)
+    text_to_speech_file(full_response, character_id, user_id)
 
     return full_response
 
@@ -149,6 +147,7 @@ def get_gpt_answer(user_message, access_token):
 @shared_task
 def get_gpt_feedback(user_email):
     episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
+    user_id = user.objects.get(email=user_email).id
     episode_content = episode.objects.get(id=episode_id).content
     character_id = 6  # 김수미로 고정
     character_script = character.objects.get(id=character_id).script
@@ -189,14 +188,14 @@ def get_gpt_feedback(user_email):
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        "chat_room",
+        f"chat_{user_id}",
         {
             "type": "gpt_feedback_message",
             "message": result,
         },
     )
 
-    text_to_speech_file(result, character_id)
+    text_to_speech_file(result, character_id, user_id)
 
     return result
 
@@ -251,7 +250,7 @@ def load_memory(user_email):
 
 
 @shared_task
-def text_to_speech_file(text: str, character_id: int) -> None:
+def text_to_speech_file(text: str, character_id: int, user_id: int) -> None:
     from base64 import b64encode
 
     # 해당 캐릭터의 음성세팅을 가져옴
@@ -289,7 +288,7 @@ def text_to_speech_file(text: str, character_id: int) -> None:
     # 음성 데이터를 WebSocket을 통해 전송
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        "chat_room",
+        f"chat_{user_id}",
         {
             "type": "gpt_audio",
             "audio_chunk": encoded_audio,
