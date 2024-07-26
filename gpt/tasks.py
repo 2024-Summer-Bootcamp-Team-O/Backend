@@ -109,7 +109,8 @@ def get_gpt_answer(user_message, user_email):
                                 conversation : {messages}
                                 You are character with {character_script}. In this {episode_content}, What would you say after watching this conversation?\
                                 You must answer in context of the conversation.\
-                                You're "assistant" in that conversation, and you have to respond from "assistant" to the line of "user."\
+                                You're an "assistant" in that conversation, and you have to look at the context and answer the line of the "user" right before.\
+                                "user" must use honorifics to you, but if it's rude, you should scold it harshly\
                                 You must provide answer in Korean.\
                                 You have to speak according to your personality unconditionally.\
                                 Don't generate the questions given earlier, just generate the answers.\
