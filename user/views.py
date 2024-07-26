@@ -13,6 +13,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import LoginSerializer
 
+r = redis.Redis(host="redis", port=6379, db=0)
+
 
 class UserRegistrationView(APIView):
 
@@ -107,6 +109,8 @@ class LogoutView(APIView):
             )
         token = RefreshToken(refresh_token)
         token.blacklist()
+        for key in r.scan_iter(f"*{user_email}*"):
+            r.delete(key)
         return Response(
             {"message": "로그아웃되었습니다."}, status=status.HTTP_205_RESET_CONTENT
         )
