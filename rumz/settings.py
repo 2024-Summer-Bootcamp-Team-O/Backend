@@ -79,8 +79,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     "https://rumz.site",
     "https://www.rumz.site",
-    "http://localhose:5173",
-    "https://localhose:5173",
+    "http://localhost:5173",
+    "https://localhost:5173",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://rumz.site"
