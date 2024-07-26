@@ -77,15 +77,10 @@ SWAGGER_SETTINGS = {
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_WHITELIST = [
-    "http://0.0.0.0:8000",
-    "http://localhost:5173",
-    "http://localhost",
     "https://rumz.site",
-    "http://rumz.site",
+    "https://www.rumz.site"
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://0.0.0.0:8000",
-    "http://localhost:5173",
     "https://rumz.site"
 ]
 

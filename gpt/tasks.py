@@ -109,6 +109,7 @@ def get_gpt_answer(user_message, user_email):
                                 conversation : {messages}
                                 You are character with {character_script}. In this {episode_content}, What would you say after watching this conversation?\
                                 You must answer in context of the conversation.\
+                                You're "assistant" in that conversation, and you have to respond from "assistant" to the line of "user."\
                                 You must provide answer in Korean.\
                                 You have to speak according to your personality unconditionally.\
                                 Don't generate the questions given earlier, just generate the answers.\
@@ -163,6 +164,7 @@ def get_gpt_feedback(user_email):
                                 Give me feedback on the answer\
                                 You must give feedback only to user's answer.\
                                 Feedback means scolding a person for what he or she did well and what he or she didn't do in his or her answer and telling him or her how to say it.\
+                                You have to give "user" a stinging piece of advice in that conversation\
                                 You must provide answer in Korean.\
                                 Don't generate the questions given earlier, just generate the answers.\
                                 When you generating an answer, don't explain the answer or question in advance, just create an answer.\
