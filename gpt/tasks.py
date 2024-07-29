@@ -87,11 +87,6 @@ def get_gpt_message(character_id, episode_id, user_email):
     
     memory.chat_memory.messages.append({"role": "assistant", "content": full_response})
     r.set(f"talk_content:{user_email}", full_response.encode("utf-8"))
-    conversation_history = "\n".join(
-        [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
-    )
-    r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
-
     text_to_speech_file(full_response, character_id, user_id)
 
     return full_response
@@ -108,7 +103,7 @@ def get_gpt_answer(user_message, user_email):
     episode_content = episode.objects.get(id=episode_id).content
     
     memory.chat_memory.messages.append({"role": "user", "content": user_message})
-    messages = load_memory(user_email)
+    messages = memory.chat_memory.messages
 
     stream = openai.ChatCompletion.create(
         model="gpt-4o",
@@ -149,11 +144,6 @@ def get_gpt_answer(user_message, user_email):
             )
     
     memory.chat_memory.messages.append({"role": "assistant", "content": full_response})
-    conversation_history = "\n".join(
-        [f"{msg['role']}: {msg['content']}" for msg in memory.chat_memory.messages]
-    )
-    r.set(f"conversation_history:{user_email}", conversation_history.encode("utf-8"))
-
     text_to_speech_file(full_response, character_id, user_id)
 
     return full_response
@@ -167,7 +157,7 @@ def get_gpt_feedback(user_email):
     episode_content = episode.objects.get(id=episode_id).content
     character_id = 6  # 김수미로 고정
     character_script = character.objects.get(id=character_id).script
-    messages = load_memory(user_email)
+    messages = memory.chat_memory.messages
     
     response = openai.ChatCompletion.create(
         model="gpt-4o",
@@ -250,20 +240,6 @@ def get_gpt_result(user_email):
 
     result = response.choices[0].message["content"].strip()
     return result
-
-
-def load_memory(user_email):
-    history = r.get(f"conversation_history:{user_email}")
-    if history:
-        messages = history.decode("utf-8").splitlines()
-        formatted_messages = []
-
-        for msg in messages:
-            role, content = msg.split(": ", 1)
-            formatted_messages.append({"role": role.strip(), "content": content.strip()})
-        
-        memory = get_user_memory(user_email)
-        memory.chat_memory.messages.extend(formatted_messages)
 
 
 @shared_task
