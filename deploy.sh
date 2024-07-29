@@ -19,16 +19,16 @@ if [ "$CURRENT_VERSION" == "blue" ]; then
     NEW_VERSION="green"
     NEW_COMPOSE_FILE=$GREEN_COMPOSE_FILE
     OLD_COMPOSE_FILE=$BLUE_COMPOSE_FILE
-    NEW_SERVICE="backend_green"
-    OLD_SERVICE="backend_blue"
+    NEW_SERVICE="backend-green"
+    OLD_SERVICE="backend-blue"
     NEW_PORT=8001
     OLD_PORT=8000
 else
     NEW_VERSION="blue"
     NEW_COMPOSE_FILE=$BLUE_COMPOSE_FILE
     OLD_COMPOSE_FILE=$GREEN_COMPOSE_FILE
-    NEW_SERVICE="backend_blue"
-    OLD_SERVICE="backend_green"
+    NEW_SERVICE="backend-blue"
+    OLD_SERVICE="backend-green"
     NEW_PORT=8000
     OLD_PORT=8001
 fi
@@ -47,12 +47,12 @@ done
 
 echo "Fetching IP address of the new service..."
 if [ "$NEW_VERSION" == "green" ]; then
-    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_green)
-    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_blue)
+    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend-green)
+    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend-blue)
     sudo sed -i "s/server ${OLD_SERVICE_IP}:8000;/server ${NEW_SERVICE_IP}:8001;/g" $NGINX_CONF_PATH
 else
-    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_blue)
-    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend_green)
+    NEW_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend-blue)
+    OLD_SERVICE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' backend-green)
     sudo sed -i "s/server ${OLD_SERVICE_IP}:8001;/server ${NEW_SERVICE_IP}:8000;/g" $NGINX_CONF_PATH
 fi
 
