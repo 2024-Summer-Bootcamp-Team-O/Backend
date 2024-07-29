@@ -97,7 +97,7 @@ def get_gpt_message(character_id, episode_id, user_email):
 def get_gpt_answer(user_message, user_email):
     memory = get_user_memory(user_email)
     user_id = user.objects.get(email=user_email).id
-    episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
+    episode_id = r.get(f"episode_id:{user_email}")
     character_id = int(r.get(f"character_id:{user_email}"))
     character_script = character.objects.get(id=character_id).script
     episode_content = episode.objects.get(id=episode_id).content
@@ -152,7 +152,7 @@ def get_gpt_answer(user_message, user_email):
 @shared_task
 def get_gpt_feedback(user_email):
     memory = get_user_memory(user_email)
-    episode_id = r.get(f"episode_id:{user_email}").decode("utf-8")
+    episode_id = r.get(f"episode_id:{user_email}")
     user_id = user.objects.get(email=user_email).id
     episode_content = episode.objects.get(id=episode_id).content
     character_id = 6  # 김수미로 고정
