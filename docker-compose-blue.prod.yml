@@ -1,11 +1,11 @@
 services:
-  backend_blue:
+  backend-blue:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: backend_blue
-    expose:
-      - "8000"
+    container_name: backend-blue
+    ports:
+      - "8000:8000"
     volumes:
       - /var/www/staticfiles:/app/staticfiles
     command: >
@@ -39,7 +39,7 @@ services:
       - RABBITMQ_USER=guest
       - RABBITMQ_PASSWORD=guest
     depends_on:
-      - backend_blue
+      - backend-blue
     networks:
       - MZ
 
@@ -57,7 +57,25 @@ services:
       - MZ
     depends_on:
       - rabbitmq
-      - backend_blue
+      - backend-blue
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - MZ
 
   prometheus:
     image: prom/prometheus:latest
@@ -71,7 +89,7 @@ services:
     networks:
       - MZ
     depends_on:
-      - backend_blue
+      - backend-blue
 
   grafana:
     image: grafana/grafana

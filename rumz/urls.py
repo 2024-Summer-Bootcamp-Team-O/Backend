@@ -19,7 +19,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path("api/", include("django_prometheus.urls")),
+    path("", include("django_prometheus.urls")),
     re_path(
         r"^api/swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),

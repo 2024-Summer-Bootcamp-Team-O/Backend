@@ -21,8 +21,7 @@ SECRET_KEY = "django-insecure--@@6+#ypqy@f3-x8jzbm*2b!c#0%d7opxmymzcs81umda%#t0b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "rumz.site"]
-
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "rumz.site", "backend-blue", "backend-green"]
 
 # Application definition
 
