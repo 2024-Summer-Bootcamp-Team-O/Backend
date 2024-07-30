@@ -86,17 +86,17 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     @swagger_auto_schema(
         operation_id="로그아웃을 위한 API",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["refresh", "access"],
+            required=["refresh"],
             properties={
                 "refresh": openapi.Schema(
                     type=openapi.TYPE_STRING, description="리프레시 토큰"
-                ),
-                "access": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="엑세스 토큰"
                 ),
             },
         ),
@@ -111,11 +111,6 @@ class LogoutView(APIView):
         if not refresh_token:
             return Response(
                 {"message": "리프레시 토큰이 필요합니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not user_email:
-            return Response(
-                {"message": "엑세스 토큰이 필요합니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         for key in r.scan_iter(f"*{user_email}*"):
