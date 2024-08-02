@@ -173,7 +173,6 @@ def get_gpt_feedback(user_email):
                     You have to give "user" a stinging piece of advice in that conversation\
                     You need to see the answer of "user" in that conversation and give feedback.\
                     You have to speak strongly so that you can come to your senses.\
-                    It's okay to use Korean curses if you need to.\
                     You must provide answer in Korean.\
                     Don't generate the questions given earlier, just generate the answers.\
                     When you generating an answer, don't explain the answer or question in advance, just create an answer.\
@@ -213,6 +212,8 @@ def get_gpt_feedback(user_email):
 
 @shared_task
 def get_gpt_result(user_email):
+    character_id = 6  # 김수미로 고정
+    character_script = character.objects.get(id=character_id).script
     feedback_keys = r.keys(f"feedback:{user_email}-*")
     feedback_values = [r.get(key).decode("utf-8") for key in feedback_keys]
     feedback_values_str = ", ".join(feedback_values)
@@ -223,9 +224,7 @@ def get_gpt_result(user_email):
             {
                 "role": "system",
                 "content": f"""
-                    You're the kind of guy that grandfathers say, "예끼 이놈아 무슨소리냐"\
-                    You must speak in that way.\
-                    You are the one who looks at what the self-centered, tactless and rude mz employee said and points out what went wrong.\
+                    You are character with {character_script}.
                     {feedback_values_str}, Look at those feedbacks and write the final feedback.\
                     Feedback means scolding a person for what he or she did well and what he or she didn't do in his or her answer and telling him or her how to say it.\
                     You must provide answer in Korean.\
