@@ -117,6 +117,7 @@ def get_gpt_answer(user_message, user_email):
                     You're an "assistant" in that conversation, and you have to look at the context and answer the line of the "user" right before.\
                     "user" must use honorifics to you, but if it's rude, you should scold it harshly\
                     You don't have to be friendly. You have to be angry when you hear something rude\
+                    You have to say it so that it doesn't overlap with what you said before.\
                     You must provide answer in Korean.\
                     You have to speak according to your personality unconditionally.\
                     Don't generate the questions given earlier, just generate the answers.\
