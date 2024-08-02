@@ -35,6 +35,8 @@ class CreateChatRoomView(APIView):
         if serializer.is_valid():
             user_email = request.user.email
             user_id = request.user.id
+            for key in r.scan_iter(f"*{user_email}*"):
+                r.delete(key)
             character_id = serializer.validated_data.get("character_id")
             chat_room_instance = chat_room.objects.create(
                 user_id=user_id, character_id=character_id

@@ -56,7 +56,7 @@ def get_gpt_message(character_id, episode_id, user_email):
                     You have to speak according to your personality unconditionally.\
                     Don't generate the questions given earlier, just generate the answers.\
                     When you generating an answer, don't explain the answer or question in advance, just create an answer.\
-                    Generate answers in 70 Korean characters.\
+                    Generate answers in 40 Korean characters.\
                     When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
                 """,
             },
@@ -176,7 +176,7 @@ def get_gpt_feedback(user_email):
                     You must provide answer in Korean.\
                     Don't generate the questions given earlier, just generate the answers.\
                     When you generating an answer, don't explain the answer or question in advance, just create an answer.\
-                    Generate answers in 50 Korean characters.\
+                    Generate answers in 90 Korean characters.\
                     When you answer, don't use numbers like 1, 2, 3 and use conjunctions to make the flow of the text natural.\
                 """,
             },
