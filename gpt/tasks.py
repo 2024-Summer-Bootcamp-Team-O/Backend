@@ -229,6 +229,7 @@ def get_gpt_result(user_email):
                     {feedback_values_str}, Look at those feedbacks and write the final feedback.\
                     Feedback means scolding a person for what he or she did well and what he or she didn't do in his or her answer and telling him or her how to say it.\
                     You must provide answer in Korean.\
+                    You must never use profanity.\
                     Don't generate the questions given earlier, just generate the answers.\
                     When you generating an answer, don't explain the answer or question in advance, just create an answer.\
                     Generate answers in 300 Korean characters.\
